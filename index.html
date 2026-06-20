@@ -42,25 +42,25 @@
     // ── CONSTANTS ──────────────────────────────────────────────────────────────
 
     // Physics
-    const GRAVITY           = 0.3;   // downward acceleration, px/frame² (tuned for 640px canvas)
-    const FLAP_VELOCITY     = -5.5;  // instant upward velocity on flap, px/frame (controlled jump)
-    const TERMINAL_VELOCITY = 8;     // max downward velocity, px/frame
+    const GRAVITY           = 0.32;  // downward acceleration, px/frame²
+    const FLAP_VELOCITY     = -5.8;  // instant upward velocity on flap, px/frame
+    const TERMINAL_VELOCITY = 7.5;   // max downward velocity, px/frame
     const TILT_REF_SPEED    = 4;     // reference horizontal speed for tilt calc, px/frame
     const TILT_MIN_DEG      = -30;   // max nose-up tilt, degrees
     const TILT_MAX_DEG      = 90;    // max nose-down tilt, degrees
 
     // Scrolling
     const BASELINE_SPEED    = 2;     // initial scroll speed, px/frame
-    const SPEED_CAP         = 6;     // maximum scroll speed, px/frame
-    const SPEED_STEP        = 0.2;   // speed increment per score interval
+    const SPEED_CAP         = 5.5;   // maximum scroll speed, px/frame
+    const SPEED_STEP        = 0.18;  // speed increment per score interval
     const SPEED_SCORE_STEP  = 5;     // score points between speed increments
-    const SPAWN_INTERVAL    = 150;   // horizontal distance between pipe spawns, px
+    const SPAWN_INTERVAL    = 190;   // horizontal distance between pipe spawns, px
 
     // Pipes
-    const PIPE_WIDTH        = 60;    // pipe rectangle width, px
-    const PIPE_GAP          = 150;   // vertical gap height between top and bottom pipe, px
-    const PIPE_MARGIN_TOP   = 50;    // min gap distance from canvas top, px
-    const PIPE_MARGIN_BOT   = 50;    // min gap distance from score bar top, px
+    const PIPE_WIDTH        = 55;    // pipe rectangle width, px
+    const PIPE_GAP          = 160;   // vertical gap height between top and bottom pipe, px
+    const PIPE_MARGIN_TOP   = 55;    // min gap distance from canvas top, px
+    const PIPE_MARGIN_BOT   = 55;    // min gap distance from score bar top, px
     const PIPE_CAP_H        = 10;    // height of cap/rim at pipe opening, px
     const PIPE_CAP_OVERHANG = 4;     // extra width on each side of the cap, px
 
@@ -143,54 +143,53 @@
 
     // ── ASSET PRELOADING ───────────────────────────────────────────────────────
 
-    // Ghosty sprite image (loaded at startup; may be replaced by custom upload)
-    const ghostyImg = new Image();
+    // Ghost animation uses 4 key frames:
+    //   Slot 0 = ghosty2.png (flap end pose)
+    //   Slot 1 = ghosty3.png (rising/jumping pose)
+    //   Slot 2 = ghosty4.png (falling/default pose)
+    //   Slot 3 = ghosty5.png (flap start pose)
+    const ANIM_FRAMES = 4;
+    const ghostFrames = [];
     let ghostyImgLoaded = false;
-    // Programmatically generated sprite sheet (3 frames: idle, flap, death)
     let ghostySpriteSheet = null;
+    let _framesLoaded = 0;
 
-    ghostyImg.onload = () => {
-      ghostyImgLoaded = true;
-      // Generate a 3-frame sprite sheet from the single ghost image
-      _generateSpriteSheet(ghostyImg);
-    };
-    ghostyImg.onerror = () => { ghostyImgLoaded = false; console.warn('ghosty.png failed to load — using fallback'); };
-    ghostyImg.src = 'assets/ghosty.png';
+    const _frameFiles = [
+      'assets/ghosty2.png',  // slot 0: flap end
+      'assets/ghosty3.png',  // slot 1: rising
+      'assets/ghosty4.png',  // slot 2: falling (default)
+      'assets/ghosty5.png',  // slot 3: flap start
+    ];
 
-    // Generate a 3-frame sprite sheet: [idle] [flap-squish] [death-stretch]
-    function _generateSpriteSheet(srcImg) {
-      const fw = SPRITE_DST_W; // frame width
-      const fh = SPRITE_DST_H; // frame height
+    for (let i = 0; i < ANIM_FRAMES; i++) {
+      const img = new Image();
+      img.onload = () => { _framesLoaded++; if (_framesLoaded === ANIM_FRAMES) _buildSpriteSheet(); };
+      img.onerror = () => { _framesLoaded++; if (_framesLoaded === ANIM_FRAMES) _buildSpriteSheet(); };
+      img.src = _frameFiles[i];
+      ghostFrames.push(img);
+    }
+
+    function _buildSpriteSheet() {
+      const fw = SPRITE_DST_W;
+      const fh = SPRITE_DST_H;
       const sheetCanvas = document.createElement('canvas');
-      sheetCanvas.width = fw * 3;
+      sheetCanvas.width = fw * ANIM_FRAMES;
       sheetCanvas.height = fh;
       const sCtx = sheetCanvas.getContext('2d');
-      const srcW = srcImg.naturalWidth || srcImg.width;
-      const srcH = srcImg.naturalHeight || srcImg.height;
 
-      // Frame 0: Idle — normal proportions
-      sCtx.drawImage(srcImg, 0, 0, srcW, srcH, 0, 0, fw, fh);
-
-      // Frame 1: Flap — slightly squished vertically, wider (squash-stretch)
-      sCtx.save();
-      sCtx.translate(fw + fw / 2, fh / 2);
-      sCtx.scale(1.1, 0.85);
-      sCtx.drawImage(srcImg, 0, 0, srcW, srcH, -fw / 2, -fh / 2, fw, fh);
-      sCtx.restore();
-
-      // Frame 2: Death — stretched vertically, narrower, rotated slightly
-      sCtx.save();
-      sCtx.translate(fw * 2 + fw / 2, fh / 2);
-      sCtx.scale(0.85, 1.1);
-      sCtx.globalAlpha = 0.7;
-      sCtx.drawImage(srcImg, 0, 0, srcW, srcH, -fw / 2, -fh / 2, fw, fh);
-      sCtx.restore();
-
-      // Convert to an Image for fast drawImage calls
-      const sheetImg = new Image();
-      sheetImg.onload = () => { ghostySpriteSheet = sheetImg; };
-      sheetImg.src = sheetCanvas.toDataURL('image/png');
+      for (let i = 0; i < ANIM_FRAMES; i++) {
+        const frame = ghostFrames[i];
+        if (frame.complete && frame.naturalWidth > 0) {
+          sCtx.drawImage(frame, 0, 0, frame.naturalWidth, frame.naturalHeight, i * fw, 0, fw, fh);
+        }
+      }
+      ghostySpriteSheet = sheetCanvas;
+      ghostyImgLoaded = true;
     }
+
+    // Reference for avatar selection (uses the falling frame as default display)
+    let ghostyImg = null;
+    setTimeout(() => { ghostyImg = ghostFrames[2]; }, 0);
 
 
     // ── OBJECT POOLS ──────────────────────────────────────────────────────────
@@ -205,6 +204,12 @@
         gapTop:     0,
         gapBottom:  0,
         scored:     false,
+        // Vertical movement (active when score > 20)
+        vy:         0,       // vertical velocity direction (+1 or -1)
+        vySpeed:    0,       // pixels per frame of vertical movement
+        yOffset:    0,       // accumulated vertical offset from original position
+        yMax:       0,       // max vertical displacement allowed
+        origGapTop: 0,       // original gapTop at spawn time
       });
     }
 
@@ -282,12 +287,38 @@
       },
       update(score) {
         this.currentSpeed = this.getSpeed(score);
-        // Advance all active pipes
+        // Advance all active pipes horizontally and vertically
         for (let i = 0; i < PIPE_POOL_SIZE; i++) {
           const p = pipePool[i];
           if (!p.active) continue;
           p.x -= this.currentSpeed;
-          if (p.x + p.width < 0) _releasePipe(p);
+          if (p.x + p.width < 0) { _releasePipe(p); continue; }
+
+          // Vertical oscillation for moving pipes (score > 20)
+          if (p.vySpeed > 0) {
+            p.yOffset += p.vy * p.vySpeed;
+            // Bounce within bounds
+            if (Math.abs(p.yOffset) >= p.yMax) {
+              p.vy = -p.vy; // reverse direction
+              p.yOffset = Math.sign(p.yOffset) * p.yMax; // clamp
+            }
+            // Apply offset to gap positions
+            p.gapTop    = p.origGapTop + p.yOffset;
+            p.gapBottom = p.gapTop + PIPE_GAP;
+            // Ensure pipe doesn't go out of canvas bounds
+            if (p.gapTop < PIPE_MARGIN_TOP) {
+              p.gapTop = PIPE_MARGIN_TOP;
+              p.gapBottom = p.gapTop + PIPE_GAP;
+              p.yOffset = p.gapTop - p.origGapTop;
+              p.vy = 1;
+            }
+            if (p.gapBottom > canvasH - SCORE_BAR_H - PIPE_MARGIN_BOT) {
+              p.gapBottom = canvasH - SCORE_BAR_H - PIPE_MARGIN_BOT;
+              p.gapTop = p.gapBottom - PIPE_GAP;
+              p.yOffset = p.gapTop - p.origGapTop;
+              p.vy = -1;
+            }
+          }
         }
         // Spawn trigger: accumulate distance and spawn at intervals
         this.distanceScrolled += this.currentSpeed;
@@ -302,12 +333,26 @@
         const minGapTop = PIPE_MARGIN_TOP;
         const maxGapTop = canvasH - SCORE_BAR_H - PIPE_MARGIN_BOT - PIPE_GAP;
         const gapTop    = minGapTop + Math.random() * (maxGapTop - minGapTop);
-        pipe.active    = true;
-        pipe.x         = canvasW;
-        pipe.width     = PIPE_WIDTH;
-        pipe.gapTop    = gapTop;
-        pipe.gapBottom = gapTop + PIPE_GAP;
-        pipe.scored    = false;
+        pipe.active     = true;
+        pipe.x          = canvasW;
+        pipe.width      = PIPE_WIDTH;
+        pipe.gapTop     = gapTop;
+        pipe.gapBottom  = gapTop + PIPE_GAP;
+        pipe.scored     = false;
+        pipe.origGapTop = gapTop;
+        pipe.yOffset    = 0;
+
+        // Enable vertical movement for SOME pipes when score > 20
+        // ~50% of pipes move, the rest stay static — randomized each spawn
+        if (gameState.score > 20 && Math.random() < 0.5) {
+          pipe.vy      = Math.random() < 0.5 ? 1 : -1; // random initial direction
+          pipe.vySpeed = 0.4 + Math.random() * 0.6;     // 0.4–1.0 px/frame (moderate)
+          pipe.yMax    = 25 + Math.random() * 25;        // 25–50 px max displacement
+        } else {
+          pipe.vy      = 0;
+          pipe.vySpeed = 0;
+          pipe.yMax    = 0;
+        }
       },
       reset() {
         this.currentSpeed     = BASELINE_SPEED;
@@ -424,32 +469,77 @@
       },
     };
 
-    // AnimationSystem — 3-frame sprite sheet animation (generated from ghosty.png)
+    // AnimationSystem — simple state-based frame selection
+    // Sprite sheet slots:
+    //   0 = ghosty2 (flap end)
+    //   1 = ghosty3 (rising)
+    //   2 = ghosty4 (falling / default / idle)
+    //   3 = ghosty5 (flap start)
+    //
+    // States:
+    //   'idle'    → show slot 2 (ghosty4)
+    //   'flap'    → play slot 3 then slot 0 (ghosty5 → ghosty2), then → rising
+    //   'rising'  → show slot 1 (ghosty3)
+    //   'falling' → show slot 2 (ghosty4)
     const AnimationSystem = {
-      frameIndex: 0,   // 0 = idle, 1 = flap, 2 = death
-      flapTimer:  0,   // ms remaining on flap frame hold
+      frameIndex:  2,         // current slot in sprite sheet (start with falling/idle)
+      state:       'idle',    // 'idle' | 'flap' | 'rising' | 'falling'
+      _flapPhase:  0,         // 0 = showing slot 3 (flap start), 1 = showing slot 0 (flap end)
+      _flapTimer:  0,         // ms timer for flap animation phases
+
+      // Duration each flap phase is held (ms)
+      _flapPhaseDuration: 100, // each phase held for 100ms → total flap anim = 200ms
 
       triggerFlap() {
-        this.frameIndex = 1;
-        this.flapTimer  = FLAP_FRAME_HOLD_MS;
+        this.state      = 'flap';
+        this._flapPhase = 0;
+        this._flapTimer = 0;
+        this.frameIndex = 3; // start with ghosty5 (flap start)
       },
+
       triggerDeath() {
-        this.frameIndex = 2;
-        this.flapTimer  = 0;
+        this.state      = 'falling';
+        this.frameIndex = 2; // ghosty4
       },
+
       reset() {
-        this.frameIndex = 0;
-        this.flapTimer  = 0;
+        this.state       = 'idle';
+        this.frameIndex  = 2;
+        this._flapPhase  = 0;
+        this._flapTimer  = 0;
       },
-      update(dtMs) {
-        if (this.flapTimer > 0) {
-          this.flapTimer -= dtMs;
-          if (this.flapTimer <= 0) {
-            this.flapTimer  = 0;
-            this.frameIndex = 0;
+
+      update(dtMs, vy) {
+        // ── Handle flap animation sequence
+        if (this.state === 'flap') {
+          this._flapTimer += dtMs;
+          if (this._flapPhase === 0 && this._flapTimer >= this._flapPhaseDuration) {
+            // Phase 0 done (ghosty5) → move to phase 1 (ghosty2)
+            this._flapPhase = 1;
+            this._flapTimer = 0;
+            this.frameIndex = 0; // slot 0 = ghosty2 (flap end)
+          } else if (this._flapPhase === 1 && this._flapTimer >= this._flapPhaseDuration) {
+            // Flap animation complete → transition to rising
+            this.state      = 'rising';
+            this.frameIndex = 1; // slot 1 = ghosty3
           }
+          return;
+        }
+
+        // ── Velocity-based state (only when not in flap animation)
+        if (vy === undefined) return;
+
+        if (vy < -0.5) {
+          // Still rising after flap animation finished
+          this.state      = 'rising';
+          this.frameIndex = 1; // ghosty3
+        } else {
+          // Falling or at apex — show default
+          this.state      = 'falling';
+          this.frameIndex = 2; // ghosty4
         }
       },
+
       getSourceRect() {
         return { sx: this.frameIndex * SPRITE_DST_W, sy: 0, sw: SPRITE_DST_W, sh: SPRITE_DST_H };
       },
@@ -1002,7 +1092,7 @@
             Scroller.update(gameState.score);
             ParticleSystem.emit(ghosty.x, ghosty.y + ghosty.height / 2, PARTICLE_RATE);
             ParticleSystem.update(FRAME_MS);
-            AnimationSystem.update(FRAME_MS);
+            AnimationSystem.update(FRAME_MS, ghosty.vy);
             HUD.updatePopups(FRAME_MS);
             const hit = CollisionDetector.check(ghosty, pipePool, canvas, SCORE_BAR_H);
             handleCollision(hit);
@@ -1014,6 +1104,10 @@
           if (gameState.phase !== 'PAUSED') {
             BackgroundSystem.update(gameState.score, FRAME_MS);
             ParallaxSystem.update();
+            // Keep ghost animation in idle state for IDLE and GAME_OVER
+            if (gameState.phase !== 'PLAYING') {
+              AnimationSystem.update(FRAME_MS, 0);
+            }
           }
         }
 
@@ -1056,9 +1150,9 @@
       x:            canvasW * 0.25 - SPRITE_DST_W / 2,  // positioned at 25% from left (Flappy Bird style)
       y:            canvasH / 2 - SPRITE_DST_H / 2,  // start vertically centered
       vy:           0,
-      width:        SPRITE_DST_W,   // 48 px
-      height:       SPRITE_DST_H,   // 48 px
-      sprite:       ghostyImg,
+      width:        SPRITE_DST_W,   // 36 px
+      height:       SPRITE_DST_H,   // 36 px
+      sprite:       null,           // set after frames load (or by avatar selection)
       tilt:         0,              // degrees; managed by PhysicsEngine.tiltAngle
       visible:      true,           // toggled during invincibility flash
       animFrame:    0,              // 0=idle, 1=flap, 2=death
@@ -1143,7 +1237,7 @@
       gameState.activeAvatar = which;
       try { localStorage.setItem(AVATAR_KEY, which); } catch { /* silent */ }
       if (which === 'ghost') {
-        ghosty.sprite = ghostyImg;
+        ghosty.sprite = ghostFrames[0] || null;
         ghosty.isCustomSprite = false;
       } else if (which === 'custom' && customSpriteImg) {
         ghosty.sprite = customSpriteImg;
@@ -1300,8 +1394,8 @@
 
       let drawn = false;
 
-      if (ghostyObj.isCustomSprite && ghostyObj.sprite && ghostyImgLoaded) {
-        // Custom avatar: clip to rounded ghost shape, then draw
+      if (ghostyObj.isCustomSprite && ghostyObj.sprite) {
+        // Custom avatar: clip to ghost shape, draw the uploaded image
         try {
           ctxRef.beginPath();
           ctxRef.moveTo(-hw, hh);
@@ -1322,25 +1416,15 @@
           }
         } catch (e) { drawn = false; }
       } else if (ghostySpriteSheet) {
-        // Default ghost: use the generated 3-frame sprite sheet
+        // Default ghost: draw the current animation frame from the 8-frame sprite sheet
         try {
           const { sx, sy, sw, sh } = AnimationSystem.getSourceRect();
           ctxRef.drawImage(ghostySpriteSheet, sx, sy, sw, sh, -hw, -hh, ghostyObj.width, ghostyObj.height);
           drawn = true;
         } catch (e) { drawn = false; }
-      } else if (ghostyObj.sprite && ghostyImgLoaded) {
-        // Fallback: draw the raw single ghost image if sprite sheet not ready yet
-        try {
-          const srcW = ghostyObj.sprite.naturalWidth || ghostyObj.sprite.width;
-          const srcH = ghostyObj.sprite.naturalHeight || ghostyObj.sprite.height;
-          if (srcW > 0 && srcH > 0) {
-            ctxRef.drawImage(ghostyObj.sprite, 0, 0, srcW, srcH, -hw, -hh, ghostyObj.width, ghostyObj.height);
-            drawn = true;
-          }
-        } catch (e) { drawn = false; }
       }
 
-      // Fallback: procedural ghost shape
+      // Fallback: procedural ghost if nothing else worked
       if (!drawn) {
         ctxRef.fillStyle = '#E8E8F0';
         ctxRef.beginPath();
@@ -1357,7 +1441,6 @@
         ctxRef.strokeStyle = '#AAAACC';
         ctxRef.lineWidth = 1.5;
         ctxRef.stroke();
-        // Eyes
         ctxRef.fillStyle = '#1A1A1A';
         ctxRef.beginPath();
         ctxRef.ellipse(-5, -3, 3, 4, 0, 0, Math.PI * 2);
