@@ -929,7 +929,7 @@
       },
       drawGameOverOverlay(ctxRef, W, H, score) {
         // Semi-transparent dark overlay
-        ctxRef.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctxRef.fillStyle = 'rgba(0, 0, 0, 0.55)';
         ctxRef.fillRect(0, 0, W, H);
         // Red glow title
         ctxRef.shadowColor = '#FF0000';
@@ -937,22 +937,35 @@
         ctxRef.font = '20px "Press Start 2P", monospace';
         ctxRef.fillStyle = '#FF4444';
         ctxRef.textAlign = 'center';
-        ctxRef.fillText('GAME OVER', W / 2, H / 2 - 50);
+        ctxRef.fillText('GAME OVER', W / 2, H / 2 - 70);
         ctxRef.shadowBlur = 0;
         // Score display
         ctxRef.font = '12px "Press Start 2P", monospace';
         ctxRef.fillStyle = '#FFD54F';
-        ctxRef.fillText('Score: ' + score, W / 2, H / 2 - 10);
+        ctxRef.fillText('Score: ' + score, W / 2, H / 2 - 30);
         // High score indication
         if (score >= gameState.highScore && score > 0) {
           ctxRef.fillStyle = '#FF6F00';
           ctxRef.font = '9px "Press Start 2P", monospace';
-          ctxRef.fillText('\u2B50 NEW BEST! \u2B50', W / 2, H / 2 + 15);
+          ctxRef.fillText('\u2B50 NEW BEST! \u2B50', W / 2, H / 2 - 5);
         }
-        // Restart prompt
-        ctxRef.font = '9px "Press Start 2P", monospace';
-        ctxRef.fillStyle = '#BBBBBB';
-        ctxRef.fillText('Space / Tap to Restart', W / 2, H / 2 + 45);
+        // Play Again button
+        const playAgainGrad = ctxRef.createLinearGradient(140, H / 2 + 20, 140, H / 2 + 60);
+        playAgainGrad.addColorStop(0, '#66BB6A');
+        playAgainGrad.addColorStop(1, '#388E3C');
+        ctxRef.fillStyle = playAgainGrad;
+        this._roundRect(ctxRef, 140, H / 2 + 20, 200, 40, 8);
+        ctxRef.fill();
+        ctxRef.fillStyle = '#FFFFFF';
+        ctxRef.font = '10px "Press Start 2P", monospace';
+        ctxRef.fillText('\u25B6 Play Again', W / 2, H / 2 + 46);
+        // Main Menu button
+        ctxRef.fillStyle = '#5C6BC0';
+        this._roundRect(ctxRef, 140, H / 2 + 72, 200, 40, 8);
+        ctxRef.fill();
+        ctxRef.fillStyle = '#FFFFFF';
+        ctxRef.font = '10px "Press Start 2P", monospace';
+        ctxRef.fillText('\u2302 Main Menu', W / 2, H / 2 + 98);
       },
       spawnPopup(x, y) {
         this._popups.push({ x: x, y: y, originY: y, age: 0, lifetime: POPUP_LIFETIME });
@@ -999,10 +1012,13 @@
         avatarGhost:     { x: 115, y: 492, w: 110, h: 28 },
         avatarCustom:    { x: 255, y: 492, w: 110, h: 28 },
         darkModeToggle:  { x: 12,  y: 12,  w: 44,  h: 28 },
+        // Game Over screen buttons (positions relative to canvasH/2 = 320)
+        playAgain:       { x: 140, y: 340, w: 200, h: 40 },
+        mainMenu:        { x: 140, y: 392, w: 200, h: 40 },
       },
 
       init(canvasRef, callbacks) {
-        const { onFlap, onPause, onToggleAudio, onOpenUpload, onToggleDarkMode, onSelectAvatar } = callbacks;
+        const { onFlap, onPause, onToggleAudio, onOpenUpload, onToggleDarkMode, onSelectAvatar, onMainMenu } = callbacks;
 
         window.addEventListener('keydown', (e) => {
           if (e.code === 'Space') { e.preventDefault(); onFlap(); }
@@ -1032,6 +1048,14 @@
               if (this.hitTest(px, py, this.buttonRegions.uploadCharacter)) {
                 onOpenUpload(); return true;
               }
+            }
+          }
+          if (gameState.phase === 'GAME_OVER') {
+            if (this.hitTest(px, py, this.buttonRegions.playAgain)) {
+              onFlap(); return true; // Play Again = restart game
+            }
+            if (this.hitTest(px, py, this.buttonRegions.mainMenu)) {
+              onMainMenu(); return true; // Go back to start screen
             }
           }
           return false;
@@ -1225,6 +1249,11 @@
     function toggleAudio() {
       gameState.audioEnabled = !gameState.audioEnabled;
       saveAudioEnabled(gameState.audioEnabled);
+    }
+    function goToMainMenu() {
+      // Return to the start screen (IDLE state) without starting a new game
+      resetSession();
+      gameState.phase = 'IDLE';
     }
     function toggleDarkMode() {
       gameState.darkMode = !gameState.darkMode;
@@ -1506,6 +1535,7 @@
         onOpenUpload:     () => document.getElementById('spriteUpload').click(),
         onToggleDarkMode: toggleDarkMode,
         onSelectAvatar:   selectAvatar,
+        onMainMenu:       goToMainMenu,
       });
 
       // Custom character upload handler
