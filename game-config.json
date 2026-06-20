@@ -1,0 +1,80 @@
+{
+  "_comment": "All physics values are frame-based, assuming 60 FPS. Do not mix with time-based (px/s) units.",
+
+  "physics": {
+    "gravity": 0.5,
+    "flapVelocity": -8,
+    "terminalVelocity": 12,
+    "tiltRefSpeed": 4,
+    "tiltMinDeg": -30,
+    "tiltMaxDeg": 90
+  },
+
+  "scrolling": {
+    "baselineSpeed": 2,
+    "speedCap": 6,
+    "speedStep": 0.2,
+    "speedScoreInterval": 5,
+    "pipeSpawnInterval": 150
+  },
+
+  "pipes": {
+    "width": 60,
+    "gapHeight": 150,
+    "marginTop": 50,
+    "marginBottom": 50,
+    "capHeight": 10,
+    "capOverhang": 4
+  },
+
+  "collision": {
+    "hitboxRadiusFactor": 0.4
+  },
+
+  "effects": {
+    "shakeDurationMs": 300,
+    "shakeMaxPx": 8,
+    "invincibilityDurationMs": 500,
+    "invincibilityFlashCycleMs": 100
+  },
+
+  "particles": {
+    "emissionRate": 3,
+    "lifetimeMs": 300,
+    "minRadius": 2,
+    "maxRadius": 5,
+    "initialOpacity": 0.6,
+    "speedPx": 1
+  },
+
+  "ui": {
+    "scorePopupLifetimeMs": 600,
+    "scorePopupRisePx": 40,
+    "scoreBarHeightPx": 40,
+    "scoreBarAlpha": 0.75
+  },
+
+  "audio": {
+    "musicVolume": 0.3
+  },
+
+  "parallax": {
+    "farLayerSpeedFactor": 0.3,
+    "nearLayerSpeedFactor": 0.6,
+    "farLayerAlpha": 0.4,
+    "nearLayerAlpha": 0.65
+  },
+
+  "pooling": {
+    "pipePoolSize": 10,
+    "particlePoolSize": 200
+  },
+
+  "canvas": {
+    "width": 480,
+    "height": 640,
+    "backgroundColor": "#87CEEB",
+    "pipeColor": "#4caf50",
+    "pipeCapColor": "#388e3c"
+  }
+}

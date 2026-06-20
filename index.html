@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Kiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Press Start 2P', monospace;
+      overflow: hidden;
+      transition: background 0.4s ease;
+    }
+
+    #gameCanvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(124, 77, 255, 0.3), 0 2px 8px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <input type="file" id="spriteUpload" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none" />
+
+  <script>
+    // ── CONSTANTS ──────────────────────────────────────────────────────────────
+
+    // Physics
+    const GRAVITY           = 0.3;   // downward acceleration, px/frame² (tuned for 640px canvas)
+    const FLAP_VELOCITY     = -5.5;  // instant upward velocity on flap, px/frame (controlled jump)
+    const TERMINAL_VELOCITY = 8;     // max downward velocity, px/frame
+    const TILT_REF_SPEED    = 4;     // reference horizontal speed for tilt calc, px/frame
+    const TILT_MIN_DEG      = -30;   // max nose-up tilt, degrees
+    const TILT_MAX_DEG      = 90;    // max nose-down tilt, degrees
+
+    // Scrolling
+    const BASELINE_SPEED    = 2;     // initial scroll speed, px/frame
+    const SPEED_CAP         = 6;     // maximum scroll speed, px/frame
+    const SPEED_STEP        = 0.2;   // speed increment per score interval
+    const SPEED_SCORE_STEP  = 5;     // score points between speed increments
+    const SPAWN_INTERVAL    = 150;   // horizontal distance between pipe spawns, px
+
+    // Pipes
+    const PIPE_WIDTH        = 60;    // pipe rectangle width, px
+    const PIPE_GAP          = 150;   // vertical gap height between top and bottom pipe, px
+    const PIPE_MARGIN_TOP   = 50;    // min gap distance from canvas top, px
+    const PIPE_MARGIN_BOT   = 50;    // min gap distance from score bar top, px
+    const PIPE_CAP_H        = 10;    // height of cap/rim at pipe opening, px
+    const PIPE_CAP_OVERHANG = 4;     // extra width on each side of the cap, px
+
+    // Collision
+    const HITBOX_RADIUS_FACTOR = 0.4; // circle hitbox radius = factor * min(w,h)/2
+
+    // Effects
+    const SHAKE_DURATION    = 300;   // screen shake duration, ms
+    const SHAKE_MAX         = 8;     // max shake displacement, px
+    const INV_DURATION      = 500;   // invincibility frame duration, ms
+    const INV_FLASH_CYCLE   = 100;   // one visible/invisible cycle during invincibility, ms
+
+    // Audio
+    const MUSIC_VOLUME      = 0.3;   // background music volume (0–1)
+
+    // Visuals
+    const SKY_BLUE               = '#87CEEB';             // fallback canvas background color
+    const PIPE_COLOR             = '#4caf50';             // pipe body fill color
+    const PIPE_CAP_COLOR         = '#388e3c';             // pipe cap/rim fill color
+    const SCORE_BAR_H            = 40;                    // score bar height, px
+    const SCORE_BAR_ALPHA        = 0.75;                  // score bar background opacity
+    const FAR_LAYER_SPEED        = 0.3 * BASELINE_SPEED;  // far parallax scroll speed, px/frame
+    const NEAR_LAYER_SPEED       = 0.6 * BASELINE_SPEED;  // near parallax scroll speed, px/frame
+    const FAR_LAYER_ALPHA        = 0.4;                   // far cloud opacity
+    const NEAR_LAYER_ALPHA       = 0.65;                  // near cloud opacity
+    const PARTICLE_RATE          = 1;                     // particles emitted per frame (reduced)
+    const PARTICLE_LIFETIME      = 200;                   // particle lifetime, ms (shorter = disappears faster)
+    const PARTICLE_MIN_R         = 1;                     // min particle radius, px
+    const PARTICLE_MAX_R         = 3;                     // max particle radius, px
+    const PARTICLE_INIT_OPACITY  = 0.4;                   // particle starting opacity (dimmer)
+    const POPUP_LIFETIME         = 600;                   // score popup duration, ms
+    const POPUP_RISE             = 40;                    // score popup rise distance, px
+
+    // Object pooling
+    const PIPE_POOL_SIZE     = 10;   // fixed PipePair pool size (no runtime allocation)
+    const PARTICLE_POOL_SIZE = 60;   // reduced particle buffer (fewer particles active at once)
+
+    // Sprite / animation
+    const FLAP_FRAME_HOLD_MS = 120;  // ms to hold flap frame before returning to idle
+    const SPRITE_SRC_W       = 32;   // source frame width on sprite sheet, px
+    const SPRITE_SRC_H       = 32;   // source frame height on sprite sheet, px
+    const SPRITE_DST_W       = 36;   // rendered width of Ghosty sprite, px (smaller character)
+    const SPRITE_DST_H       = 36;   // rendered height of Ghosty sprite, px (smaller character)
+
+    // Timing
+    const FRAME_MS           = 1000 / 60;  // nominal ms per frame at 60 fps (≈16.67)
+    const BG_TRANSITION_FRAMES = 60;       // bg transition duration in frames (≈1 second)
+
+    // localStorage
+    const HS_KEY             = 'flappyKiroHighScore';   // integer score as string
+    const AUDIO_KEY          = 'flappyKiroSfx';         // 'true' or 'false'
+    const CUSTOM_SPRITE_KEY  = 'flappyKiroCustomSprite'; // data URL of uploaded sprite
+    const DARK_MODE_KEY      = 'flappyKiroDarkMode';    // 'true' or 'false'
+    const AVATAR_KEY         = 'flappyKiroAvatar';      // 'ghost' or 'custom'
+
+    // Background theme definitions
+    const BG_THEMES = [
+      { score: 0,  skyTop: '#87CEEB', skyBot: '#B0E2FF', label: '☀ Day',    pipebody: '#4caf50', pipecap: '#388e3c' },
+      { score: 10, skyTop: '#FF6B35', skyBot: '#FFB347', label: '🌅 Sunset', pipebody: '#8B4513', pipecap: '#6B3410' },
+      { score: 25, skyTop: '#0D0D2B', skyBot: '#191970', label: '🌙 Night',  pipebody: '#2E4057', pipecap: '#1A2A3A' },
+      { score: 50, skyTop: '#FF6B9D', skyBot: '#C8A2C8', label: '🌸 Dawn',   pipebody: '#7B2D8B', pipecap: '#5A1F6A' },
+      { score: 75, skyTop: '#2C3E50', skyBot: '#00CED1', label: '⛈ Storm',  pipebody: '#1B6CA8', pipecap: '#145280' },
+    ];
+
+    // Canvas and context (resolved once at startup)
+    const canvas  = document.getElementById('gameCanvas');
+    const ctx     = canvas.getContext('2d');
+    const canvasW = canvas.width;   // 480
+    const canvasH = canvas.height;  // 640
+    const groundY = canvasH - SCORE_BAR_H; // top of score bar = collision ground
+
+    // Pre-declared working variables — reused every frame, never allocated in tick()
+    let _shakeDx   = 0;
+    let _shakeDy   = 0;
+    let _hitCx     = 0;
+    let _hitCy     = 0;
+    let _hitR      = 0;
+    let _tiltAngle = 0;
+
+
+    // ── ASSET PRELOADING ───────────────────────────────────────────────────────
+
+    // Ghosty sprite image (loaded at startup; may be replaced by custom upload)
+    const ghostyImg = new Image();
+    let ghostyImgLoaded = false;
+    // Programmatically generated sprite sheet (3 frames: idle, flap, death)
+    let ghostySpriteSheet = null;
+
+    ghostyImg.onload = () => {
+      ghostyImgLoaded = true;
+      // Generate a 3-frame sprite sheet from the single ghost image
+      _generateSpriteSheet(ghostyImg);
+    };
+    ghostyImg.onerror = () => { ghostyImgLoaded = false; console.warn('ghosty.png failed to load — using fallback'); };
+    ghostyImg.src = 'assets/ghosty.png';
+
+    // Generate a 3-frame sprite sheet: [idle] [flap-squish] [death-stretch]
+    function _generateSpriteSheet(srcImg) {
+      const fw = SPRITE_DST_W; // frame width
+      const fh = SPRITE_DST_H; // frame height
+      const sheetCanvas = document.createElement('canvas');
+      sheetCanvas.width = fw * 3;
+      sheetCanvas.height = fh;
+      const sCtx = sheetCanvas.getContext('2d');
+      const srcW = srcImg.naturalWidth || srcImg.width;
+      const srcH = srcImg.naturalHeight || srcImg.height;
+
+      // Frame 0: Idle — normal proportions
+      sCtx.drawImage(srcImg, 0, 0, srcW, srcH, 0, 0, fw, fh);
+
+      // Frame 1: Flap — slightly squished vertically, wider (squash-stretch)
+      sCtx.save();
+      sCtx.translate(fw + fw / 2, fh / 2);
+      sCtx.scale(1.1, 0.85);
+      sCtx.drawImage(srcImg, 0, 0, srcW, srcH, -fw / 2, -fh / 2, fw, fh);
+      sCtx.restore();
+
+      // Frame 2: Death — stretched vertically, narrower, rotated slightly
+      sCtx.save();
+      sCtx.translate(fw * 2 + fw / 2, fh / 2);
+      sCtx.scale(0.85, 1.1);
+      sCtx.globalAlpha = 0.7;
+      sCtx.drawImage(srcImg, 0, 0, srcW, srcH, -fw / 2, -fh / 2, fw, fh);
+      sCtx.restore();
+
+      // Convert to an Image for fast drawImage calls
+      const sheetImg = new Image();
+      sheetImg.onload = () => { ghostySpriteSheet = sheetImg; };
+      sheetImg.src = sheetCanvas.toDataURL('image/png');
+    }
+
+
+    // ── OBJECT POOLS ──────────────────────────────────────────────────────────
+
+    // Pipe pool — fixed array, no runtime allocation
+    const pipePool = [];
+    for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+      pipePool.push({
+        active:     false,
+        x:          0,
+        width:      PIPE_WIDTH,
+        gapTop:     0,
+        gapBottom:  0,
+        scored:     false,
+      });
+    }
+
+    // Particle pool — fixed array, no runtime allocation
+    const particlePool = [];
+    for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+      particlePool.push({
+        active:   false,
+        x:        0,
+        y:        0,
+        radius:   0,
+        color:    '#FFFFFF',
+        opacity:  0,
+        age:      0,
+        lifetime: PARTICLE_LIFETIME,
+        dx:       0,
+        dy:       0,
+      });
+    }
+
+    // Pool helpers — acquire / release, never `new`
+    function _acquirePipe() {
+      for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+        if (!pipePool[i].active) return pipePool[i];
+      }
+      console.warn('Pool exhausted: pipes');
+      return null;
+    }
+
+    function _releasePipe(pipe) {
+      pipe.active = false;
+    }
+
+    function _acquireParticle() {
+      for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+        if (!particlePool[i].active) return particlePool[i];
+      }
+      return null; // silently skip when pool is full
+    }
+
+    function _releaseParticle(p) {
+      p.active = false;
+    }
+
+
+    // ── SUBSYSTEMS ────────────────────────────────────────────────────────────
+
+    // Physics Engine — kinematic updates on Ghosty each frame
+    const PhysicsEngine = {
+      update(ghosty) {
+        ghosty.vy += GRAVITY;                               // 1. accumulate gravity
+        ghosty.vy = Math.min(ghosty.vy, TERMINAL_VELOCITY); // 2. clamp terminal velocity
+        ghosty.y  += ghosty.vy;                             // 3. Euler position integration
+        if (ghosty.y < 0) { ghosty.y = 0; ghosty.vy = 0; } // 4. ceiling clamp
+      },
+      flap(ghosty) {
+        ghosty.vy = FLAP_VELOCITY;
+      },
+      tiltAngle(vy) {
+        const raw = Math.atan2(vy, TILT_REF_SPEED) * (180 / Math.PI);
+        return Math.max(TILT_MIN_DEG, Math.min(TILT_MAX_DEG, raw));
+      },
+    };
+
+    // Scroller — manages all active Pipe_Pairs, scroll distance, and spawning
+    const Scroller = {
+      currentSpeed:      BASELINE_SPEED,
+      distanceScrolled:  0,
+
+      getSpeed(score) {
+        return Math.min(
+          BASELINE_SPEED + Math.floor(score / SPEED_SCORE_STEP) * SPEED_STEP,
+          SPEED_CAP
+        );
+      },
+      update(score) {
+        this.currentSpeed = this.getSpeed(score);
+        // Advance all active pipes
+        for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+          const p = pipePool[i];
+          if (!p.active) continue;
+          p.x -= this.currentSpeed;
+          if (p.x + p.width < 0) _releasePipe(p);
+        }
+        // Spawn trigger: accumulate distance and spawn at intervals
+        this.distanceScrolled += this.currentSpeed;
+        while (this.distanceScrolled >= SPAWN_INTERVAL) {
+          this.distanceScrolled -= SPAWN_INTERVAL;
+          this._spawnPipe();
+        }
+      },
+      _spawnPipe() {
+        const pipe = _acquirePipe();
+        if (!pipe) return;
+        const minGapTop = PIPE_MARGIN_TOP;
+        const maxGapTop = canvasH - SCORE_BAR_H - PIPE_MARGIN_BOT - PIPE_GAP;
+        const gapTop    = minGapTop + Math.random() * (maxGapTop - minGapTop);
+        pipe.active    = true;
+        pipe.x         = canvasW;
+        pipe.width     = PIPE_WIDTH;
+        pipe.gapTop    = gapTop;
+        pipe.gapBottom = gapTop + PIPE_GAP;
+        pipe.scored    = false;
+      },
+      reset() {
+        this.currentSpeed     = BASELINE_SPEED;
+        // Start with negative distance so first pipe spawns after ~1.5 seconds of flight
+        this.distanceScrolled = -100;
+        for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+          pipePool[i].active = false;
+        }
+      },
+    };
+
+    // Collision Detector — pure collision logic with no side effects
+    const CollisionDetector = {
+      insetHitbox(ghosty) {
+        return {
+          x: ghosty.x + ghosty.width  * 0.2,
+          y: ghosty.y + ghosty.height * 0.2,
+          w: ghosty.width  * 0.6,
+          h: ghosty.height * 0.6,
+        };
+      },
+      aabbOverlap(rectA, rectB) {
+        return rectA.x < rectB.x + rectB.w &&
+               rectA.x + rectA.w > rectB.x &&
+               rectA.y < rectB.y + rectB.h &&
+               rectA.y + rectA.h > rectB.y;
+      },
+      checkPipes(hitbox, pipes) {
+        for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+          const p = pipes[i];
+          if (!p.active) continue;
+          // Top pipe rect
+          const topRect = { x: p.x, y: 0, w: p.width, h: p.gapTop };
+          if (this.aabbOverlap(hitbox, topRect)) return true;
+          // Bottom pipe rect
+          const botRect = { x: p.x, y: p.gapBottom, w: p.width, h: canvasH - p.gapBottom };
+          if (this.aabbOverlap(hitbox, botRect)) return true;
+        }
+        return false;
+      },
+      checkBounds(hitbox, canvasRef, scoreBarH) {
+        // Ground collision (top of score bar) — game over trigger
+        if (hitbox.y + hitbox.h >= canvasRef.height - scoreBarH) return true;
+        return false;
+      },
+      check(ghosty, pipes, canvasRef, scoreBarH) {
+        const hitbox = this.insetHitbox(ghosty);
+        if (this.checkPipes(hitbox, pipes)) return true;
+        if (this.checkBounds(hitbox, canvasRef, scoreBarH)) return true;
+        return false;
+      },
+    };
+
+    // AudioManager — wraps HTMLAudioElement instances with error-safe play helpers
+    const AudioManager = {
+      _jump:     null,
+      _score:    null,
+      _gameOver: null,
+      _music:    null,
+
+      init() {
+        this._jump = new Audio('assets/jump.wav');
+        this._jump.onerror = () => { this._jump = null; };
+        this._score = new Audio('assets/score.wav');
+        this._score.onerror = () => { this._score = null; };
+        this._gameOver = new Audio('assets/game_over.wav');
+        this._gameOver.onerror = () => { this._gameOver = null; };
+        // Try loading background music
+        this._music = new Audio('assets/music.ogg');
+        this._music.loop = true;
+        this._music.volume = MUSIC_VOLUME;
+        this._music.onerror = () => {
+          // Fallback to mp3
+          this._music = new Audio('assets/music.mp3');
+          this._music.loop = true;
+          this._music.volume = MUSIC_VOLUME;
+          this._music.onerror = () => { this._music = null; };
+        };
+      },
+      _play(audio) {
+        if (!audio || !gameState.audioEnabled) return;
+        audio.currentTime = 0;
+        const p = audio.play();
+        if (p) p.catch(e => console.warn('Audio play failed:', e));
+      },
+      flap() {
+        this._play(this._jump);
+      },
+      score() {
+        this._play(this._score);
+      },
+      gameOver() {
+        this._play(this._gameOver);
+      },
+      startMusic() {
+        if (!this._music || !gameState.audioEnabled) return;
+        this._music.currentTime = 0;
+        const p = this._music.play();
+        if (p) p.catch(e => console.warn('Music play failed:', e));
+      },
+      pauseMusic() {
+        if (!this._music) return;
+        this._music.pause();
+      },
+      resumeMusic() {
+        if (!this._music || !gameState.audioEnabled) return;
+        const p = this._music.play();
+        if (p) p.catch(e => console.warn('Music resume failed:', e));
+      },
+      stopMusic() {
+        if (!this._music) return;
+        this._music.pause();
+        this._music.currentTime = 0;
+      },
+    };
+
+    // AnimationSystem — 3-frame sprite sheet animation (generated from ghosty.png)
+    const AnimationSystem = {
+      frameIndex: 0,   // 0 = idle, 1 = flap, 2 = death
+      flapTimer:  0,   // ms remaining on flap frame hold
+
+      triggerFlap() {
+        this.frameIndex = 1;
+        this.flapTimer  = FLAP_FRAME_HOLD_MS;
+      },
+      triggerDeath() {
+        this.frameIndex = 2;
+        this.flapTimer  = 0;
+      },
+      reset() {
+        this.frameIndex = 0;
+        this.flapTimer  = 0;
+      },
+      update(dtMs) {
+        if (this.flapTimer > 0) {
+          this.flapTimer -= dtMs;
+          if (this.flapTimer <= 0) {
+            this.flapTimer  = 0;
+            this.frameIndex = 0;
+          }
+        }
+      },
+      getSourceRect() {
+        return { sx: this.frameIndex * SPRITE_DST_W, sy: 0, sw: SPRITE_DST_W, sh: SPRITE_DST_H };
+      },
+    };
+
+    // BackgroundSystem — dynamic sky gradient + milestone transitions + dark mode night scene
+    const BackgroundSystem = {
+      currentThemeIdx: 0,
+      themeChanged:    true,
+      // Pre-seeded star positions for night mode (generated once)
+      _stars: [],
+      _starsInit: false,
+
+      _initStars() {
+        if (this._starsInit) return;
+        this._starsInit = true;
+        for (let i = 0; i < 60; i++) {
+          this._stars.push({
+            x: Math.random() * canvasW,
+            y: Math.random() * (canvasH * 0.7),
+            r: 0.5 + Math.random() * 1.5,
+            twinkleSpeed: 0.5 + Math.random() * 2,
+          });
+        }
+      },
+
+      getTheme(score) {
+        let idx = 0;
+        for (let i = BG_THEMES.length - 1; i >= 0; i--) {
+          if (score >= BG_THEMES[i].score) { idx = i; break; }
+        }
+        return BG_THEMES[idx];
+      },
+      update(score, dtMs) {
+        const newIdx = this._getThemeIdx(score);
+        if (newIdx !== this.currentThemeIdx) {
+          this.currentThemeIdx = newIdx;
+          this.themeChanged = true;
+        }
+      },
+      _getThemeIdx(score) {
+        let idx = 0;
+        for (let i = BG_THEMES.length - 1; i >= 0; i--) {
+          if (score >= BG_THEMES[i].score) { idx = i; break; }
+        }
+        return idx;
+      },
+      draw(ctxRef, score, W, H) {
+        if (gameState.darkMode) {
+          // Night mode: dark sky with stars and moon
+          this._initStars();
+          const grad = ctxRef.createLinearGradient(0, 0, 0, H - SCORE_BAR_H);
+          grad.addColorStop(0, '#0a0a2a');
+          grad.addColorStop(0.4, '#1a1a4e');
+          grad.addColorStop(1, '#0d1b3e');
+          ctxRef.fillStyle = grad;
+          ctxRef.fillRect(0, 0, W, H - SCORE_BAR_H);
+
+          // Stars with twinkling
+          const now = Date.now() / 1000;
+          for (let i = 0; i < this._stars.length; i++) {
+            const s = this._stars[i];
+            const alpha = 0.4 + 0.6 * Math.abs(Math.sin(now * s.twinkleSpeed + i));
+            ctxRef.globalAlpha = alpha;
+            ctxRef.fillStyle = '#FFFFFF';
+            ctxRef.beginPath();
+            ctxRef.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctxRef.fill();
+          }
+          ctxRef.globalAlpha = 1;
+
+          // Moon (top-right area)
+          ctxRef.fillStyle = '#F5F5DC';
+          ctxRef.shadowColor = '#F5F5DC';
+          ctxRef.shadowBlur = 20;
+          ctxRef.beginPath();
+          ctxRef.arc(W - 80, 80, 30, 0, Math.PI * 2);
+          ctxRef.fill();
+          ctxRef.shadowBlur = 0;
+          // Moon crescent shadow
+          ctxRef.fillStyle = '#0a0a2a';
+          ctxRef.beginPath();
+          ctxRef.arc(W - 68, 75, 25, 0, Math.PI * 2);
+          ctxRef.fill();
+        } else {
+          // Day mode: use theme-based gradient
+          const theme = BG_THEMES[this.currentThemeIdx];
+          const grad = ctxRef.createLinearGradient(0, 0, 0, H - SCORE_BAR_H);
+          grad.addColorStop(0, theme.skyTop);
+          grad.addColorStop(1, theme.skyBot);
+          ctxRef.fillStyle = grad;
+          ctxRef.fillRect(0, 0, W, H - SCORE_BAR_H);
+        }
+      },
+      reset() {
+        this.currentThemeIdx = 0;
+        this.themeChanged = true;
+      },
+    };
+
+    // ParallaxSystem — two independent layers of clouds for depth
+    const ParallaxSystem = {
+      layers: [
+        { speed: FAR_LAYER_SPEED,  alpha: FAR_LAYER_ALPHA,  clouds: [] },
+        { speed: NEAR_LAYER_SPEED, alpha: NEAR_LAYER_ALPHA, clouds: [] },
+      ],
+
+      init(w, h) {
+        // Generate random clouds for each layer
+        for (let l = 0; l < this.layers.length; l++) {
+          const layer = this.layers[l];
+          layer.clouds = [];
+          const count = l === 0 ? 5 : 4; // far layer has more clouds
+          for (let i = 0; i < count; i++) {
+            layer.clouds.push({
+              x: Math.random() * w,
+              y: 30 + Math.random() * (h * 0.5),
+              rx: 30 + Math.random() * 40,
+              ry: 15 + Math.random() * 20,
+            });
+          }
+        }
+      },
+      update() {
+        for (let l = 0; l < this.layers.length; l++) {
+          const layer = this.layers[l];
+          for (let i = 0; i < layer.clouds.length; i++) {
+            const c = layer.clouds[i];
+            c.x -= layer.speed;
+            if (c.x + c.rx * 2 < 0) {
+              c.x = canvasW + c.rx;
+              c.y = 30 + Math.random() * (canvasH * 0.5);
+            }
+          }
+        }
+      },
+      draw(ctxRef) {
+        for (let l = 0; l < this.layers.length; l++) {
+          const layer = this.layers[l];
+          ctxRef.globalAlpha = gameState.darkMode ? layer.alpha * 0.4 : layer.alpha;
+          ctxRef.fillStyle = gameState.darkMode ? '#445577' : '#FFFFFF';
+          for (let i = 0; i < layer.clouds.length; i++) {
+            const c = layer.clouds[i];
+            ctxRef.beginPath();
+            ctxRef.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, Math.PI * 2);
+            ctxRef.fill();
+            ctxRef.beginPath();
+            ctxRef.ellipse(c.x - c.rx * 0.5, c.y + c.ry * 0.3, c.rx * 0.7, c.ry * 0.8, 0, 0, Math.PI * 2);
+            ctxRef.fill();
+            ctxRef.beginPath();
+            ctxRef.ellipse(c.x + c.rx * 0.4, c.y + c.ry * 0.2, c.rx * 0.6, c.ry * 0.7, 0, 0, Math.PI * 2);
+            ctxRef.fill();
+          }
+        }
+        ctxRef.globalAlpha = 1;
+      },
+    };
+
+    // ParticleSystem — particle trail emitter and renderer
+    const ParticleSystem = {
+      emit(x, y, count) {
+        for (let i = 0; i < count; i++) {
+          const p = _acquireParticle();
+          if (!p) return;
+          const angle = Math.PI + (Math.random() - 0.5) * (Math.PI / 2); // leftward ±45°
+          p.active   = true;
+          p.x        = x;
+          p.y        = y;
+          p.radius   = PARTICLE_MIN_R + Math.random() * (PARTICLE_MAX_R - PARTICLE_MIN_R);
+          p.color    = Math.random() < 0.5 ? '#FFFFFF' : '#ADD8E6';
+          p.opacity  = PARTICLE_INIT_OPACITY;
+          p.age      = 0;
+          p.lifetime = PARTICLE_LIFETIME;
+          p.dx       = Math.cos(angle);
+          p.dy       = Math.sin(angle);
+        }
+      },
+      update(dt) {
+        for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+          const p = particlePool[i];
+          if (!p.active) continue;
+          p.age += dt;
+          if (p.age >= p.lifetime) {
+            _releaseParticle(p);
+            continue;
+          }
+          p.x += p.dx;
+          p.y += p.dy;
+          p.opacity = PARTICLE_INIT_OPACITY * (1 - p.age / p.lifetime);
+        }
+      },
+      draw(ctxRef) {
+        for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+          const p = particlePool[i];
+          if (!p.active) continue;
+          ctxRef.globalAlpha = p.opacity;
+          ctxRef.fillStyle = p.color;
+          ctxRef.beginPath();
+          ctxRef.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctxRef.fill();
+        }
+        ctxRef.globalAlpha = 1;
+      },
+      clear() {
+        for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+          particlePool[i].active = false;
+        }
+      },
+    };
+
+    // HUD — Heads-Up Display (score bar, overlays, popups)
+    const HUD = {
+      _popups: [],
+
+      drawScoreBar(ctxRef, score, highScore, speed, W, H) {
+        // Gradient score bar
+        const barGrad = ctxRef.createLinearGradient(0, H - SCORE_BAR_H, 0, H);
+        barGrad.addColorStop(0, 'rgba(20, 20, 40, 0.9)');
+        barGrad.addColorStop(1, 'rgba(10, 10, 20, 0.95)');
+        ctxRef.fillStyle = barGrad;
+        ctxRef.fillRect(0, H - SCORE_BAR_H, W, SCORE_BAR_H);
+        // Top border accent
+        ctxRef.fillStyle = '#7C4DFF';
+        ctxRef.fillRect(0, H - SCORE_BAR_H, W, 2);
+        // Score text
+        ctxRef.font = '10px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#FFFFFF';
+        ctxRef.textAlign = 'left';
+        ctxRef.fillText(formatScore(score), 12, H - SCORE_BAR_H + 26);
+        // Speed in the center (yellow accent)
+        ctxRef.textAlign = 'center';
+        ctxRef.fillStyle = '#FFEE88';
+        ctxRef.fillText(formatSpeed(speed), W / 2, H - SCORE_BAR_H + 26);
+        // High score on the right
+        ctxRef.textAlign = 'right';
+        ctxRef.fillStyle = '#B39DDB';
+        ctxRef.fillText(formatHigh(highScore), W - 12, H - SCORE_BAR_H + 26);
+      },
+      drawStartOverlay(ctxRef, W, H, highScore, sfxOn) {
+        const dm = gameState.darkMode;
+        const panelBg = dm ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)';
+        const textColor = '#FFFFFF';
+        const subtextColor = dm ? '#BBBBBB' : '#DDDDDD';
+
+        // Title with glow effect
+        ctxRef.shadowColor = '#7C4DFF';
+        ctxRef.shadowBlur = 12;
+        ctxRef.font = '20px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#FFFFFF';
+        ctxRef.textAlign = 'center';
+        ctxRef.fillText('FLAPPY KIRO', W / 2, 70);
+        ctxRef.shadowBlur = 0;
+
+        // Subtitle
+        ctxRef.font = '8px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#B39DDB';
+        ctxRef.fillText('~ dodge the pipes, chase the score ~', W / 2, 92);
+
+        // Instructions panel with rounded look
+        ctxRef.fillStyle = panelBg;
+        this._roundRect(ctxRef, 50, 260, 380, 100, 10);
+        ctxRef.fill();
+        ctxRef.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctxRef.lineWidth = 1;
+        ctxRef.stroke();
+        ctxRef.font = '8px "Press Start 2P", monospace';
+        ctxRef.fillStyle = subtextColor;
+        ctxRef.textAlign = 'center';
+        ctxRef.fillText('SPACE / TAP \u2014 Flap', W / 2, 285);
+        ctxRef.fillText('P / ESC \u2014 Pause', W / 2, 305);
+        ctxRef.fillText('Pass pipes to score', W / 2, 325);
+        ctxRef.fillText('Avoid walls & floor', W / 2, 345);
+
+        // ── PLAY button (gradient green)
+        const playGrad = ctxRef.createLinearGradient(160, 375, 160, 420);
+        playGrad.addColorStop(0, '#66BB6A');
+        playGrad.addColorStop(1, '#388E3C');
+        ctxRef.fillStyle = playGrad;
+        this._roundRect(ctxRef, 160, 375, 160, 44, 8);
+        ctxRef.fill();
+        ctxRef.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctxRef.lineWidth = 1;
+        ctxRef.stroke();
+        ctxRef.fillStyle = '#FFFFFF';
+        ctxRef.font = '12px "Press Start 2P", monospace';
+        ctxRef.fillText('\u25B6 PLAY', W / 2, 403);
+
+        // ── SFX toggle button
+        ctxRef.fillStyle = sfxOn ? '#5C6BC0' : '#555555';
+        this._roundRect(ctxRef, 160, 430, 160, 34, 8);
+        ctxRef.fill();
+        ctxRef.fillStyle = '#FFFFFF';
+        ctxRef.font = '9px "Press Start 2P", monospace';
+        ctxRef.fillText(sfxOn ? '\uD83D\uDD0A SFX ON' : '\uD83D\uDD07 SFX OFF', W / 2, 451);
+
+        // ── Avatar section — show current + toggle if custom exists
+        ctxRef.fillStyle = panelBg;
+        this._roundRect(ctxRef, 100, 472, 280, 75, 8);
+        ctxRef.fill();
+
+        // Avatar label
+        ctxRef.font = '7px "Press Start 2P", monospace';
+        ctxRef.fillStyle = subtextColor;
+        ctxRef.fillText('AVATAR', W / 2, 486);
+
+        if (gameState.hasCustomAvatar) {
+          // Two selectable options side by side
+          const ghostActive = gameState.activeAvatar === 'ghost';
+          ctxRef.fillStyle = ghostActive ? '#7C4DFF' : '#444444';
+          this._roundRect(ctxRef, 115, 492, 110, 28, 6);
+          ctxRef.fill();
+          ctxRef.fillStyle = '#FFFFFF';
+          ctxRef.font = '7px "Press Start 2P", monospace';
+          ctxRef.fillText('\uD83D\uDC7B Ghost', 170, 510);
+
+          const customActive = gameState.activeAvatar === 'custom';
+          ctxRef.fillStyle = customActive ? '#7C4DFF' : '#444444';
+          this._roundRect(ctxRef, 255, 492, 110, 28, 6);
+          ctxRef.fill();
+          ctxRef.fillStyle = '#FFFFFF';
+          ctxRef.fillText('\uD83C\uDFA8 Custom', 310, 510);
+
+          // Change avatar button (below selector)
+          ctxRef.fillStyle = '#2196F3';
+          this._roundRect(ctxRef, 160, 524, 160, 20, 5);
+          ctxRef.fill();
+          ctxRef.fillStyle = '#FFFFFF';
+          ctxRef.font = '6px "Press Start 2P", monospace';
+          ctxRef.fillText('\uD83D\uDCC1 Change Avatar', W / 2, 537);
+        } else {
+          // Only upload button
+          ctxRef.fillStyle = '#2196F3';
+          this._roundRect(ctxRef, 140, 495, 200, 28, 6);
+          ctxRef.fill();
+          ctxRef.fillStyle = '#FFFFFF';
+          ctxRef.font = '8px "Press Start 2P", monospace';
+          ctxRef.fillText('\uD83D\uDCC1 Upload Avatar', W / 2, 513);
+        }
+
+        // ── Dark/Light mode toggle (top-left)
+        ctxRef.fillStyle = dm ? '#333333' : '#EEEEEE';
+        this._roundRect(ctxRef, 12, 12, 44, 28, 6);
+        ctxRef.fill();
+        ctxRef.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctxRef.stroke();
+        ctxRef.font = '14px sans-serif';
+        ctxRef.fillStyle = dm ? '#FFEB3B' : '#333333';
+        ctxRef.textAlign = 'center';
+        ctxRef.fillText(dm ? '\u263D' : '\u2600', 34, 31);
+
+        // ── High score with trophy
+        ctxRef.font = '10px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#FFD54F';
+        ctxRef.textAlign = 'center';
+        ctxRef.fillText('\uD83C\uDFC6 Best: ' + highScore, W / 2, 548);
+      },
+
+      // Helper: draw a rounded rectangle path
+      _roundRect(ctxRef, x, y, w, h, r) {
+        ctxRef.beginPath();
+        ctxRef.moveTo(x + r, y);
+        ctxRef.lineTo(x + w - r, y);
+        ctxRef.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctxRef.lineTo(x + w, y + h - r);
+        ctxRef.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctxRef.lineTo(x + r, y + h);
+        ctxRef.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctxRef.lineTo(x, y + r);
+        ctxRef.quadraticCurveTo(x, y, x + r, y);
+        ctxRef.closePath();
+      },
+      drawPauseOverlay(ctxRef, W, H) {
+        ctxRef.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        ctxRef.fillRect(0, 0, W, H);
+        // Pause icon
+        ctxRef.fillStyle = '#FFFFFF';
+        ctxRef.fillRect(W / 2 - 18, H / 2 - 50, 12, 36);
+        ctxRef.fillRect(W / 2 + 6, H / 2 - 50, 12, 36);
+        // Text
+        ctxRef.font = '16px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#FFFFFF';
+        ctxRef.textAlign = 'center';
+        ctxRef.fillText('PAUSED', W / 2, H / 2 + 10);
+        ctxRef.font = '8px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#AAAAAA';
+        ctxRef.fillText('P / Escape to Resume', W / 2, H / 2 + 35);
+      },
+      drawGameOverOverlay(ctxRef, W, H, score) {
+        // Semi-transparent dark overlay
+        ctxRef.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctxRef.fillRect(0, 0, W, H);
+        // Red glow title
+        ctxRef.shadowColor = '#FF0000';
+        ctxRef.shadowBlur = 15;
+        ctxRef.font = '20px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#FF4444';
+        ctxRef.textAlign = 'center';
+        ctxRef.fillText('GAME OVER', W / 2, H / 2 - 50);
+        ctxRef.shadowBlur = 0;
+        // Score display
+        ctxRef.font = '12px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#FFD54F';
+        ctxRef.fillText('Score: ' + score, W / 2, H / 2 - 10);
+        // High score indication
+        if (score >= gameState.highScore && score > 0) {
+          ctxRef.fillStyle = '#FF6F00';
+          ctxRef.font = '9px "Press Start 2P", monospace';
+          ctxRef.fillText('\u2B50 NEW BEST! \u2B50', W / 2, H / 2 + 15);
+        }
+        // Restart prompt
+        ctxRef.font = '9px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#BBBBBB';
+        ctxRef.fillText('Space / Tap to Restart', W / 2, H / 2 + 45);
+      },
+      spawnPopup(x, y) {
+        this._popups.push({ x: x, y: y, originY: y, age: 0, lifetime: POPUP_LIFETIME });
+      },
+      updatePopups(dt) {
+        for (let i = this._popups.length - 1; i >= 0; i--) {
+          const p = this._popups[i];
+          p.age += dt;
+          if (p.age >= p.lifetime) {
+            this._popups.splice(i, 1);
+            continue;
+          }
+          p.y = p.originY + (-POPUP_RISE * (p.age / p.lifetime));
+        }
+      },
+      drawPopups(ctxRef) {
+        ctxRef.font = 'bold 16px "Press Start 2P", monospace';
+        ctxRef.textAlign = 'center';
+        for (let i = 0; i < this._popups.length; i++) {
+          const p = this._popups[i];
+          const opacity = 1 - p.age / p.lifetime;
+          ctxRef.globalAlpha = opacity;
+          ctxRef.strokeStyle = '#000000';
+          ctxRef.lineWidth = 2;
+          ctxRef.strokeText('+1', p.x, p.y);
+          ctxRef.fillStyle = '#FFFFFF';
+          ctxRef.fillText('+1', p.x, p.y);
+        }
+        ctxRef.globalAlpha = 1;
+      },
+      clearPopups() {
+        this._popups.length = 0;
+      },
+    };
+
+    // InputHandler — event registration and button hit-testing
+    const InputHandler = {
+      // Pre-declared button bounds — no per-event allocation
+      buttonRegions: {
+        play:            { x: 160, y: 375, w: 160, h: 44 },
+        soundToggle:     { x: 160, y: 430, w: 160, h: 34 },
+        uploadCharacter: { x: 140, y: 495, w: 200, h: 28 },
+        changeAvatar:    { x: 160, y: 524, w: 160, h: 20 },
+        avatarGhost:     { x: 115, y: 492, w: 110, h: 28 },
+        avatarCustom:    { x: 255, y: 492, w: 110, h: 28 },
+        darkModeToggle:  { x: 12,  y: 12,  w: 44,  h: 28 },
+      },
+
+      init(canvasRef, callbacks) {
+        const { onFlap, onPause, onToggleAudio, onOpenUpload, onToggleDarkMode, onSelectAvatar } = callbacks;
+
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') { e.preventDefault(); onFlap(); }
+          if (e.code === 'KeyP' || e.code === 'Escape') onPause();
+          if (e.code === 'KeyM') onToggleAudio();
+        });
+
+        const handlePointer = (px, py) => {
+          if (gameState.phase === 'IDLE') {
+            if (this.hitTest(px, py, this.buttonRegions.darkModeToggle)) {
+              onToggleDarkMode(); return true;
+            }
+            if (this.hitTest(px, py, this.buttonRegions.soundToggle)) {
+              onToggleAudio(); return true;
+            }
+            if (gameState.hasCustomAvatar) {
+              if (this.hitTest(px, py, this.buttonRegions.avatarGhost)) {
+                onSelectAvatar('ghost'); return true;
+              }
+              if (this.hitTest(px, py, this.buttonRegions.avatarCustom)) {
+                onSelectAvatar('custom'); return true;
+              }
+              if (this.hitTest(px, py, this.buttonRegions.changeAvatar)) {
+                onOpenUpload(); return true;
+              }
+            } else {
+              if (this.hitTest(px, py, this.buttonRegions.uploadCharacter)) {
+                onOpenUpload(); return true;
+              }
+            }
+          }
+          return false;
+        };
+
+        canvasRef.addEventListener('click', (e) => {
+          const rect = canvasRef.getBoundingClientRect();
+          const scaleX = canvasRef.width / rect.width;
+          const scaleY = canvasRef.height / rect.height;
+          const px = (e.clientX - rect.left) * scaleX;
+          const py = (e.clientY - rect.top) * scaleY;
+          if (!handlePointer(px, py)) onFlap();
+        });
+
+        canvasRef.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          const touch = e.changedTouches[0];
+          const rect = canvasRef.getBoundingClientRect();
+          const scaleX = canvasRef.width / rect.width;
+          const scaleY = canvasRef.height / rect.height;
+          const px = (touch.clientX - rect.left) * scaleX;
+          const py = (touch.clientY - rect.top) * scaleY;
+          if (!handlePointer(px, py)) onFlap();
+        });
+      },
+      hitTest(px, py, rect) {
+        return px >= rect.x && px <= rect.x + rect.w &&
+               py >= rect.y && py <= rect.y + rect.h;
+      },
+    };
+
+    // GameLoop — requestAnimationFrame driver with delta-time normalization
+    const GameLoop = {
+      _rafId: null,
+      _lastTime: 0,
+      _accumulator: 0,
+
+      start() {
+        this._lastTime = performance.now();
+        this._accumulator = 0;
+        this._rafId = requestAnimationFrame((ts) => this.tick(ts));
+      },
+      tick(timestamp) {
+        // Calculate real elapsed time since last frame
+        const dt = Math.min(timestamp - this._lastTime, 50); // cap at 50ms to avoid spiral of death
+        this._lastTime = timestamp;
+
+        // Accumulate time and step in fixed FRAME_MS intervals for deterministic physics
+        this._accumulator += dt;
+
+        while (this._accumulator >= FRAME_MS) {
+          this._accumulator -= FRAME_MS;
+
+          // Fixed-step update (PLAYING only)
+          if (gameState.phase === 'PLAYING') {
+            PhysicsEngine.update(ghosty);
+            ghosty.tilt = PhysicsEngine.tiltAngle(ghosty.vy);
+            Scroller.update(gameState.score);
+            ParticleSystem.emit(ghosty.x, ghosty.y + ghosty.height / 2, PARTICLE_RATE);
+            ParticleSystem.update(FRAME_MS);
+            AnimationSystem.update(FRAME_MS);
+            HUD.updatePopups(FRAME_MS);
+            const hit = CollisionDetector.check(ghosty, pipePool, canvas, SCORE_BAR_H);
+            handleCollision(hit);
+            checkScoring();
+            updateScreenShake(timestamp);
+          }
+
+          // Background + parallax update (all states except PAUSED)
+          if (gameState.phase !== 'PAUSED') {
+            BackgroundSystem.update(gameState.score, FRAME_MS);
+            ParallaxSystem.update();
+          }
+        }
+
+        // Render once per actual frame (always)
+        render(ctx, timestamp);
+
+        this._rafId = requestAnimationFrame((ts) => this.tick(ts));
+      },
+    };
+
+
+    // ── GAME STATE ────────────────────────────────────────────────────────────
+
+    const gameState = {
+      phase:              'IDLE',    // 'IDLE' | 'PLAYING' | 'PAUSED' | 'GAME_OVER'
+      score:              0,
+      highScore:          0,
+      invincible:         false,
+      invincibilityStart: null,      // timestamp ms (Date.now / performance.now)
+      shaking:            false,
+      shakeStart:         null,      // timestamp ms
+      shakeMagnitude:     0,
+      audioEnabled:       true,      // when false, all AudioManager methods are no-ops
+      darkMode:           false,     // dark/light mode toggle for UI chrome
+      activeAvatar:       'ghost',   // 'ghost' or 'custom' — which avatar to render
+      hasCustomAvatar:    false,     // true once a custom avatar has been uploaded
+      themeTransition: {
+        active:     false,
+        fromTheme:  0,               // index into BG_THEMES of outgoing theme
+        toTheme:    0,               // index into BG_THEMES of incoming theme
+        progress:   0,               // 0.0 (start) → 1.0 (complete)
+      },
+    };
+
+    // Store the custom sprite separately so we can switch between it and default
+    let customSpriteImg = null;
+
+    // Ghosty — the player-controlled character object
+    const ghosty = {
+      x:            canvasW * 0.25 - SPRITE_DST_W / 2,  // positioned at 25% from left (Flappy Bird style)
+      y:            canvasH / 2 - SPRITE_DST_H / 2,  // start vertically centered
+      vy:           0,
+      width:        SPRITE_DST_W,   // 48 px
+      height:       SPRITE_DST_H,   // 48 px
+      sprite:       ghostyImg,
+      tilt:         0,              // degrees; managed by PhysicsEngine.tiltAngle
+      visible:      true,           // toggled during invincibility flash
+      animFrame:    0,              // 0=idle, 1=flap, 2=death
+      animTimer:    0,              // ms remaining on flap frame hold
+      isCustomSprite: false,        // true when a user-uploaded sprite is active
+      statusMsg:    null,           // { text: string, expiry: number } | null
+    };
+
+
+    // ── GAME LOGIC FUNCTIONS ───────────────────────────────────────────────────
+
+    function loadHighScore() {
+      // stub — implemented in task 2
+      try {
+        const raw = localStorage.getItem(HS_KEY);
+        return raw !== null ? Math.max(0, parseInt(raw, 10) || 0) : 0;
+      } catch { return 0; }
+    }
+
+    function saveHighScore(value) {
+      // stub — implemented in task 2
+      try { localStorage.setItem(HS_KEY, String(value)); } catch { /* silent */ }
+    }
+
+    function loadAudioEnabled() {
+      // stub — implemented in task 2
+      try { return localStorage.getItem(AUDIO_KEY) !== 'false'; } catch { return true; }
+    }
+
+    function saveAudioEnabled(enabled) {
+      // stub — implemented in task 2
+      try { localStorage.setItem(AUDIO_KEY, String(enabled)); } catch { /* silent */ }
+    }
+
+    function handleFlap() {
+      if (gameState.phase === 'PAUSED') return; // no-op while paused
+      if (gameState.phase === 'IDLE') {
+        resetSession();
+        gameState.phase = 'PLAYING';
+        AudioManager.startMusic();
+        return;
+      }
+      if (gameState.phase === 'PLAYING') {
+        PhysicsEngine.flap(ghosty);
+        AnimationSystem.triggerFlap();
+        AudioManager.flap();
+        return;
+      }
+      if (gameState.phase === 'GAME_OVER') {
+        resetSession();
+        gameState.phase = 'PLAYING';
+        AudioManager.startMusic();
+        return;
+      }
+    }
+    function handlePause() {
+      if (gameState.phase === 'PLAYING') {
+        gameState.phase = 'PAUSED';
+        gameState._pauseStart = Date.now();
+        AudioManager.pauseMusic();
+      } else if (gameState.phase === 'PAUSED') {
+        const pauseDuration = Date.now() - (gameState._pauseStart || 0);
+        gameState.phase = 'PLAYING';
+        // Offset timers by pause duration
+        if (gameState.invincibilityStart !== null) gameState.invincibilityStart += pauseDuration;
+        if (gameState.shakeStart !== null) gameState.shakeStart += pauseDuration;
+        AudioManager.resumeMusic();
+      }
+    }
+    function toggleAudio() {
+      gameState.audioEnabled = !gameState.audioEnabled;
+      saveAudioEnabled(gameState.audioEnabled);
+    }
+    function toggleDarkMode() {
+      gameState.darkMode = !gameState.darkMode;
+      try { localStorage.setItem(DARK_MODE_KEY, String(gameState.darkMode)); } catch { /* silent */ }
+      // Update body background to match mode
+      document.body.style.background = gameState.darkMode ? '#050510' : '#1a1a2e';
+    }
+    function selectAvatar(which) {
+      if (which === 'custom' && !gameState.hasCustomAvatar) return;
+      gameState.activeAvatar = which;
+      try { localStorage.setItem(AVATAR_KEY, which); } catch { /* silent */ }
+      if (which === 'ghost') {
+        ghosty.sprite = ghostyImg;
+        ghosty.isCustomSprite = false;
+      } else if (which === 'custom' && customSpriteImg) {
+        ghosty.sprite = customSpriteImg;
+        ghosty.isCustomSprite = true;
+      }
+    }
+    function handleCollision(hit) {
+      if (!hit) return;
+      // Instant game over on any collision — Flappy Bird behavior
+      if (gameState.invincible) return; // prevent re-triggering during same frame
+      gameState.invincible = true; // guard against multiple triggers
+      _triggerGameOver();
+    }
+
+    function _triggerGameOver() {
+      gameState.phase = 'GAME_OVER';
+      gameState.shaking = true;
+      gameState.shakeStart = Date.now();
+      AnimationSystem.triggerDeath();
+      ghosty.tilt = 0;
+      ParticleSystem.clear();
+      AudioManager.stopMusic();
+      AudioManager.gameOver();
+      if (gameState.score > gameState.highScore) {
+        gameState.highScore = gameState.score;
+        saveHighScore(gameState.highScore);
+      }
+    }
+    function checkScoring() {
+      // Score when ghosty's leading edge (right side) passes the pipe's right edge
+      const ghostyRight = ghosty.x + ghosty.width;
+      for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+        const p = pipePool[i];
+        if (!p.active || p.scored) continue;
+        if (ghostyRight >= p.x + p.width) {
+          p.scored = true;
+          gameState.score++;
+          Scroller.currentSpeed = Scroller.getSpeed(gameState.score);
+          AudioManager.score();
+          HUD.spawnPopup(ghosty.x + ghosty.width / 2, ghosty.y);
+          if (gameState.score > gameState.highScore) {
+            gameState.highScore = gameState.score;
+            saveHighScore(gameState.highScore);
+          }
+        }
+      }
+    }
+    function resetSession() {
+      gameState.score       = 0;
+      gameState.invincible  = false;
+      gameState.invincibilityStart = null;
+      gameState.shaking     = false;
+      gameState.shakeStart  = null;
+      ghosty.x              = canvasW * 0.25 - ghosty.width / 2;
+      ghosty.y              = canvasH / 2 - ghosty.height / 2;
+      ghosty.vy             = 0;
+      ghosty.visible        = true;
+      ghosty.tilt           = 0;
+      Scroller.reset();
+      ParticleSystem.clear();
+      HUD.clearPopups();
+      AnimationSystem.reset();
+      BackgroundSystem.reset();
+    }
+    function updateScreenShake(timestamp) {
+      if (!gameState.shaking) return;
+      const elapsed = Date.now() - gameState.shakeStart;
+      if (elapsed >= SHAKE_DURATION) {
+        gameState.shaking = false;
+      }
+    }
+
+    // Helper: linear color interpolation between two hex colors
+    function lerpColor(a, b, t) {
+      const ra = parseInt(a.slice(1, 3), 16);
+      const ga = parseInt(a.slice(3, 5), 16);
+      const ba = parseInt(a.slice(5, 7), 16);
+      const rb = parseInt(b.slice(1, 3), 16);
+      const gb = parseInt(b.slice(3, 5), 16);
+      const bb = parseInt(b.slice(5, 7), 16);
+      const r  = Math.round(ra + (rb - ra) * t);
+      const g  = Math.round(ga + (gb - ga) * t);
+      const bv = Math.round(ba + (bb - ba) * t);
+      return `rgb(${r},${g},${bv})`;
+    }
+
+    // Helper: format functions for HUD display
+    function formatScore(x)   { return 'Score: ' + x; }
+    function formatHigh(x)    { return 'High: ' + x; }
+    function formatSpeed(spd) { return 'Speed: ' + spd.toFixed(1); }
+
+
+    // ── RENDER FUNCTIONS ──────────────────────────────────────────────────────
+
+    function render(ctxRef, timestamp) {
+      ctxRef.save();
+      // Apply screen shake if active
+      if (gameState.shaking) {
+        const elapsed = Date.now() - gameState.shakeStart;
+        if (elapsed < SHAKE_DURATION) {
+          const factor = 1 - elapsed / SHAKE_DURATION;
+          _shakeDx = (Math.random() * 2 - 1) * SHAKE_MAX * factor;
+          _shakeDy = (Math.random() * 2 - 1) * SHAKE_MAX * factor;
+          ctxRef.translate(_shakeDx, _shakeDy);
+        }
+      }
+
+      // 1. Clear canvas
+      ctxRef.clearRect(0, 0, canvasW, canvasH);
+      // 2. Background sky gradient
+      BackgroundSystem.draw(ctxRef, gameState.score, canvasW, canvasH);
+      // 3. Parallax clouds
+      ParallaxSystem.draw(ctxRef);
+      // 4. Pipes
+      drawPipes(ctxRef, pipePool);
+      // 5. Ghosty (with idle bob animation when in IDLE state)
+      if (gameState.phase === 'IDLE') {
+        const bobOffset = Math.sin(Date.now() / 400) * 4;
+        const savedY = ghosty.y;
+        ghosty.y += bobOffset;
+        drawGhosty(ctxRef, ghosty);
+        ghosty.y = savedY;
+      } else {
+        drawGhosty(ctxRef, ghosty);
+      }
+      // 6. Particles
+      ParticleSystem.draw(ctxRef);
+
+      ctxRef.restore(); // end screen shake region
+
+      // 7. Score Bar (outside shake)
+      HUD.drawScoreBar(ctxRef, gameState.score, gameState.highScore, Scroller.currentSpeed, canvasW, canvasH);
+      // 8. Popups
+      HUD.drawPopups(ctxRef);
+      // 9. Overlays
+      if (gameState.phase === 'IDLE') {
+        HUD.drawStartOverlay(ctxRef, canvasW, canvasH, gameState.highScore, gameState.audioEnabled);
+      } else if (gameState.phase === 'PAUSED') {
+        HUD.drawPauseOverlay(ctxRef, canvasW, canvasH);
+      } else if (gameState.phase === 'GAME_OVER') {
+        HUD.drawGameOverOverlay(ctxRef, canvasW, canvasH, gameState.score);
+      }
+    }
+
+    function drawGhosty(ctxRef, ghostyObj) {
+      if (!ghostyObj.visible) return;
+      const cx = ghostyObj.x + ghostyObj.width  / 2;
+      const cy = ghostyObj.y + ghostyObj.height / 2;
+      const hw = ghostyObj.width / 2;
+      const hh = ghostyObj.height / 2;
+      ctxRef.save();
+      ctxRef.translate(cx, cy);
+      ctxRef.rotate(ghostyObj.tilt * Math.PI / 180);
+
+      let drawn = false;
+
+      if (ghostyObj.isCustomSprite && ghostyObj.sprite && ghostyImgLoaded) {
+        // Custom avatar: clip to rounded ghost shape, then draw
+        try {
+          ctxRef.beginPath();
+          ctxRef.moveTo(-hw, hh);
+          ctxRef.lineTo(-hw, -hh * 0.2);
+          ctxRef.quadraticCurveTo(-hw, -hh, 0, -hh);
+          ctxRef.quadraticCurveTo(hw, -hh, hw, -hh * 0.2);
+          ctxRef.lineTo(hw, hh);
+          ctxRef.lineTo(hw * 0.5, hh * 0.7);
+          ctxRef.lineTo(0, hh);
+          ctxRef.lineTo(-hw * 0.5, hh * 0.7);
+          ctxRef.closePath();
+          ctxRef.clip();
+          const srcW = ghostyObj.sprite.naturalWidth || ghostyObj.sprite.width;
+          const srcH = ghostyObj.sprite.naturalHeight || ghostyObj.sprite.height;
+          if (srcW > 0 && srcH > 0) {
+            ctxRef.drawImage(ghostyObj.sprite, 0, 0, srcW, srcH, -hw, -hh, ghostyObj.width, ghostyObj.height);
+            drawn = true;
+          }
+        } catch (e) { drawn = false; }
+      } else if (ghostySpriteSheet) {
+        // Default ghost: use the generated 3-frame sprite sheet
+        try {
+          const { sx, sy, sw, sh } = AnimationSystem.getSourceRect();
+          ctxRef.drawImage(ghostySpriteSheet, sx, sy, sw, sh, -hw, -hh, ghostyObj.width, ghostyObj.height);
+          drawn = true;
+        } catch (e) { drawn = false; }
+      } else if (ghostyObj.sprite && ghostyImgLoaded) {
+        // Fallback: draw the raw single ghost image if sprite sheet not ready yet
+        try {
+          const srcW = ghostyObj.sprite.naturalWidth || ghostyObj.sprite.width;
+          const srcH = ghostyObj.sprite.naturalHeight || ghostyObj.sprite.height;
+          if (srcW > 0 && srcH > 0) {
+            ctxRef.drawImage(ghostyObj.sprite, 0, 0, srcW, srcH, -hw, -hh, ghostyObj.width, ghostyObj.height);
+            drawn = true;
+          }
+        } catch (e) { drawn = false; }
+      }
+
+      // Fallback: procedural ghost shape
+      if (!drawn) {
+        ctxRef.fillStyle = '#E8E8F0';
+        ctxRef.beginPath();
+        ctxRef.moveTo(-hw, hh);
+        ctxRef.lineTo(-hw, -hh * 0.2);
+        ctxRef.quadraticCurveTo(-hw, -hh, 0, -hh);
+        ctxRef.quadraticCurveTo(hw, -hh, hw, -hh * 0.2);
+        ctxRef.lineTo(hw, hh);
+        ctxRef.lineTo(hw * 0.5, hh * 0.7);
+        ctxRef.lineTo(0, hh);
+        ctxRef.lineTo(-hw * 0.5, hh * 0.7);
+        ctxRef.closePath();
+        ctxRef.fill();
+        ctxRef.strokeStyle = '#AAAACC';
+        ctxRef.lineWidth = 1.5;
+        ctxRef.stroke();
+        // Eyes
+        ctxRef.fillStyle = '#1A1A1A';
+        ctxRef.beginPath();
+        ctxRef.ellipse(-5, -3, 3, 4, 0, 0, Math.PI * 2);
+        ctxRef.ellipse(5, -3, 3, 4, 0, 0, Math.PI * 2);
+        ctxRef.fill();
+      }
+
+      ctxRef.restore();
+    }
+
+    function drawPipes(ctxRef, pipes) {
+      // Draw all pipe bodies
+      ctxRef.fillStyle = PIPE_COLOR;
+      for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+        const p = pipes[i];
+        if (!p.active) continue;
+        // Top pipe body
+        ctxRef.fillRect(p.x, 0, p.width, p.gapTop);
+        // Bottom pipe body
+        ctxRef.fillRect(p.x, p.gapBottom, p.width, canvasH - SCORE_BAR_H - p.gapBottom);
+      }
+      // Draw all pipe caps
+      ctxRef.fillStyle = PIPE_CAP_COLOR;
+      for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+        const p = pipes[i];
+        if (!p.active) continue;
+        // Top pipe cap (at bottom of top pipe, facing gap)
+        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG, p.gapTop - PIPE_CAP_H,
+          p.width + PIPE_CAP_OVERHANG * 2, PIPE_CAP_H);
+        // Bottom pipe cap (at top of bottom pipe, facing gap)
+        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG, p.gapBottom,
+          p.width + PIPE_CAP_OVERHANG * 2, PIPE_CAP_H);
+      }
+    }
+
+
+    // ── INPUT HANDLER REGISTRATION ────────────────────────────────────────────
+
+    // Registered once at page load inside the init block below
+    // InputHandler.init(canvas, { onFlap: handleFlap, onPause: handlePause, ... })
+
+
+    // ── GAME LOOP BOOTSTRAP ───────────────────────────────────────────────────
+
+    // Page-load initialisation
+    (function init() {
+      // Load persisted preferences
+      gameState.highScore    = loadHighScore();
+      gameState.audioEnabled = loadAudioEnabled();
+      try { gameState.darkMode = localStorage.getItem(DARK_MODE_KEY) === 'true'; } catch { /* silent */ }
+      try { gameState.activeAvatar = localStorage.getItem(AVATAR_KEY) || 'ghost'; } catch { /* silent */ }
+
+      // Apply dark mode to body
+      if (gameState.darkMode) document.body.style.background = '#050510';
+
+      // Initialise subsystems
+      ParallaxSystem.init(canvasW, canvasH);
+      AudioManager.init();
+      InputHandler.init(canvas, {
+        onFlap:           handleFlap,
+        onPause:          handlePause,
+        onToggleAudio:    toggleAudio,
+        onOpenUpload:     () => document.getElementById('spriteUpload').click(),
+        onToggleDarkMode: toggleDarkMode,
+        onSelectAvatar:   selectAvatar,
+      });
+
+      // Custom character upload handler
+      const fileInput = document.getElementById('spriteUpload');
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type (PNG/JPG/GIF/WebP)
+        const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+          console.warn('Invalid file type:', file.type);
+          ghosty.statusMsg = { text: 'Invalid format! Use PNG/JPG.', expiry: Date.now() + 2000 };
+          fileInput.value = '';
+          return;
+        }
+
+        // Validate file size (max 512KB)
+        if (file.size > 512 * 1024) {
+          console.warn('File too large:', file.size);
+          ghosty.statusMsg = { text: 'File too large! Max 512KB.', expiry: Date.now() + 2000 };
+          fileInput.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const rawImg = new Image();
+          rawImg.onload = () => {
+            // Resize uploaded image to match ghost's exact render dimensions
+            const resizeCanvas = document.createElement('canvas');
+            resizeCanvas.width = SPRITE_DST_W;   // 36
+            resizeCanvas.height = SPRITE_DST_H;  // 36
+            const rCtx = resizeCanvas.getContext('2d');
+            // Clip to ghost shape before drawing
+            const hw = SPRITE_DST_W / 2;
+            const hh = SPRITE_DST_H / 2;
+            rCtx.beginPath();
+            rCtx.moveTo(0, SPRITE_DST_H);
+            rCtx.lineTo(0, hh - hh * 0.2);
+            rCtx.quadraticCurveTo(0, 0, hw, 0);
+            rCtx.quadraticCurveTo(SPRITE_DST_W, 0, SPRITE_DST_W, hh - hh * 0.2);
+            rCtx.lineTo(SPRITE_DST_W, SPRITE_DST_H);
+            rCtx.lineTo(SPRITE_DST_W * 0.75, SPRITE_DST_H * 0.85);
+            rCtx.lineTo(hw, SPRITE_DST_H);
+            rCtx.lineTo(SPRITE_DST_W * 0.25, SPRITE_DST_H * 0.85);
+            rCtx.closePath();
+            rCtx.clip();
+            rCtx.drawImage(rawImg, 0, 0, rawImg.naturalWidth, rawImg.naturalHeight, 0, 0, SPRITE_DST_W, SPRITE_DST_H);
+
+            const resizedImg = new Image();
+            resizedImg.onload = () => {
+              customSpriteImg = resizedImg;
+              gameState.hasCustomAvatar = true;
+              ghosty.sprite = resizedImg;
+              ghosty.isCustomSprite = true;
+              ghostyImgLoaded = true;
+              gameState.activeAvatar = 'custom';
+              ghosty.statusMsg = { text: 'Avatar uploaded!', expiry: Date.now() + 2000 };
+              try {
+                localStorage.setItem(CUSTOM_SPRITE_KEY, resizeCanvas.toDataURL('image/png'));
+                localStorage.setItem(AVATAR_KEY, 'custom');
+              } catch { /* silent */ }
+            };
+            resizedImg.src = resizeCanvas.toDataURL('image/png');
+          };
+          rawImg.onerror = () => {
+            ghosty.statusMsg = { text: 'Failed to load image.', expiry: Date.now() + 2000 };
+          };
+          rawImg.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+        fileInput.value = '';
+      });
+
+      // Restore custom sprite from localStorage if previously uploaded
+      try {
+        const savedSprite = localStorage.getItem(CUSTOM_SPRITE_KEY);
+        if (savedSprite) {
+          const img = new Image();
+          img.onload = () => {
+            customSpriteImg = img;
+            gameState.hasCustomAvatar = true;
+            ghostyImgLoaded = true;
+            // Apply the saved avatar preference
+            if (gameState.activeAvatar === 'custom') {
+              ghosty.sprite = img;
+              ghosty.isCustomSprite = true;
+            }
+          };
+          img.src = savedSprite;
+        }
+      } catch { /* silent */ }
+
+      // Begin game loop
+      GameLoop.start();
+    })();
+
+  </script>
+</body>
+</html>
