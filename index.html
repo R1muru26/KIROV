@@ -68,6 +68,73 @@
       <button id="closeDisclaimer" style="background:#66BB6A; border:none; color:white; padding:10px 20px; font-family:'Press Start 2P', monospace; font-size:10px; border-radius:6px; cursor:pointer;">CLOSE</button>
     </div>
   </div>
+
+  <!-- Mechanics & Features Modal — explains power-ups, combo system, and special obstacles -->
+  <div id="mechanicsModalOverlay" style="display:none; position:absolute; z-index:11; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
+    <div style="background:rgba(20,20,40,0.95); border:3px solid #00E5FF; border-radius:12px; color:#FFF; max-width:420px; width:92%; padding:20px; font-size:9px; line-height:1.7; text-align:left; box-shadow:0 0 25px rgba(0,229,255,0.5); max-height:90vh; overflow-y:auto;">
+      <h2 style="font-size:13px; margin-bottom:12px; color:#00E5FF; text-align:center; text-shadow:0 0 10px #00E5FF;">⚙ Mechanics & Features</h2>
+
+      <!-- Power-Ups Section -->
+      <h3 style="font-size:10px; color:#FFD54F; margin-bottom:8px; border-bottom:1px solid rgba(255,213,79,0.3); padding-bottom:4px;">⚡ Power-Ups</h3>
+      <p style="margin-bottom:8px; color:#BBBBBB;">Power-ups spawn randomly during gameplay. Fly into them to activate!</p>
+      <ul style="padding-left:12px; margin-bottom:14px; list-style:none;">
+        <li style="margin-bottom:8px;">
+          <strong style="color:#4FC3F7;">🛡 Shield</strong> — Absorbs one hit. When active, you're immune to pipe collisions. Once the shield absorbs a hit, it breaks and you briefly blink/flash (a short grace period) before becoming fully vulnerable again. <em style="color:#888;">The blinking only happens AFTER the shield is consumed, not while it's active.</em>
+        </li>
+        <li style="margin-bottom:8px;">
+          <strong style="color:#81C784;">🐢 Slow-Motion</strong> — Temporarily reduces pipe scroll speed by 40% for 5 seconds, giving you more reaction time.
+        </li>
+        <li style="margin-bottom:8px;">
+          <strong style="color:#FFB74D;">✕2 Score Multiplier</strong> — All points earned are doubled for 6 seconds. Stack with combo for big scores!
+        </li>
+        <li style="margin-bottom:8px;">
+          <strong style="color:#CE93D8;">🔮 Mini-Size</strong> — Temporarily shrinks the ghost's hitbox and sprite to 60% size for 5 seconds, making gaps easier to navigate.
+        </li>
+      </ul>
+
+      <!-- Combo Streak Section -->
+      <h3 style="font-size:10px; color:#FFD54F; margin-bottom:8px; border-bottom:1px solid rgba(255,213,79,0.3); padding-bottom:4px;">🔥 Combo Streak</h3>
+      <ul style="padding-left:12px; margin-bottom:14px; list-style:none;">
+        <li style="margin-bottom:6px;">Consecutive clean pipe passes build a combo multiplier.</li>
+        <li style="margin-bottom:6px;">Combo resets on collision or game over.</li>
+        <li style="margin-bottom:6px;">Higher combo = more points per pipe cleared!</li>
+      </ul>
+
+      <!-- Special Obstacles Section -->
+      <h3 style="font-size:10px; color:#FFD54F; margin-bottom:8px; border-bottom:1px solid rgba(255,213,79,0.3); padding-bottom:4px;">🚧 Special Obstacles</h3>
+      <ul style="padding-left:12px; margin-bottom:14px; list-style:none;">
+        <li style="margin-bottom:6px;">After 20 points, some pipes move up and down!</li>
+        <li style="margin-bottom:6px;">Stay alert — not all pipes move, keeping you on your toes.</li>
+      </ul>
+
+      <!-- Other Features -->
+      <h3 style="font-size:10px; color:#FFD54F; margin-bottom:8px; border-bottom:1px solid rgba(255,213,79,0.3); padding-bottom:4px;">🎨 Other Features</h3>
+      <ul style="padding-left:12px; margin-bottom:16px; list-style:none;">
+        <li style="margin-bottom:6px;"><strong style="color:#B0BEC5;">🌙 Day/Night Mode:</strong> Toggle from the start screen. Background changes to match.</li>
+        <li style="margin-bottom:6px;"><strong style="color:#B0BEC5;">🖼 Custom Skin:</strong> Upload your own avatar — it auto-resizes to fit the ghost shape.</li>
+      </ul>
+
+      <div style="text-align:center;">
+        <button id="closeMechanicsBtn" style="background:#00E5FF; border:none; color:#000; padding:10px 24px; font-family:'Press Start 2P', monospace; font-size:10px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #00E5FF;">GOT IT</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="skinGalleryModal" style="display:none; position:absolute; z-index:10; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div style="background:rgba(30,30,50,0.95); border:4px solid #FFD54F; border-radius:12px; color:#FFF; width:90%; max-width:400px; padding:20px; text-align:center; box-shadow:0 0 20px #000;">
+      <h2 style="font-size:14px; margin-bottom:15px; color:#FFD54F;">Skin Gallery</h2>
+      <div id="galleryList" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:20px; max-height:200px; overflow-y:auto; padding:10px; background:rgba(0,0,0,0.3); border-radius:8px;">
+        <!-- Skins injected here -->
+      </div>
+      <div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+        <button id="uploadNewSkinBtn" style="background:#2196F3; border:none; color:white; padding:10px; font-family:'Press Start 2P', monospace; font-size:8px; border-radius:6px; cursor:pointer;">+ NEW SKIN</button>
+        <button id="uploadDeathSpriteBtn" style="display:none; background:#8E24AA; border:none; color:white; padding:10px; font-family:'Press Start 2P', monospace; font-size:8px; border-radius:6px; cursor:pointer;">+ DEATH SPRITE</button>
+      </div>
+      <button id="closeGallery" style="background:#E53935; border:none; color:white; padding:10px 20px; font-family:'Press Start 2P', monospace; font-size:10px; border-radius:6px; cursor:pointer;">CLOSE</button>
+    </div>
+  </div>
+  <input type="file" id="deathSpriteUpload" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none" />
+
   <script>
     // ── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -139,20 +206,31 @@
     const FRAME_MS           = 1000 / 60;  // nominal ms per frame at 60 fps (≈16.67)
     const BG_TRANSITION_FRAMES = 60;       // bg transition duration in frames (≈1 second)
 
+    // Near-miss detection — threshold in px for "close call" glow effect
+    const NEAR_MISS_THRESHOLD = 12;   // px gap between hitbox edge and pipe edge
+    const NEAR_MISS_GLOW_MS   = 400;  // how long the glow lingers after near miss, ms
+
+    // Night mode reward — score threshold for unlocking special skin
+    const NIGHT_REWARD_SCORE  = 10;   // min score in night mode to unlock reward skin
+
     // localStorage
     const HS_KEY             = 'flappyKiroHighScore';   // integer score as string
     const AUDIO_KEY          = 'flappyKiroSfx';         // 'true' or 'false'
-    const CUSTOM_SPRITE_KEY  = 'flappyKiroCustomSprite'; // data URL of uploaded sprite
+    const CUSTOM_SPRITE_KEY  = 'flappyKiroCustomSprite'; // legacy data URL of uploaded sprite
+    const SKIN_GALLERY_KEY   = 'flappyKiroSkinGallery'; // JSON array of skin objects
+    const NIGHT_REWARD_KEY   = 'flappyKiroNightReward';  // 'true' if reward unlocked
+    const ACTIVE_SKIN_KEY    = 'flappyKiroActiveSkin';   // id of active gallery skin
     const DARK_MODE_KEY      = 'flappyKiroDarkMode';    // 'true' or 'false'
-    const AVATAR_KEY         = 'flappyKiroAvatar';      // 'ghost' or 'custom'
+    const DARK_MODE_OVERRIDE_KEY = 'flappyKiroDarkModeOverride';
+    const AVATAR_KEY         = 'flappyKiroAvatar';      // 'ghost' or 'custom' (or skin id)
 
-    // Background theme definitions
+    // Background theme definitions (Vibrant Retro/Synthwave Palettes)
     const BG_THEMES = [
-      { score: 0,  skyTop: '#87CEEB', skyBot: '#B0E2FF', label: '☀ Day',    pipebody: '#4caf50', pipecap: '#388e3c' },
-      { score: 10, skyTop: '#FF6B35', skyBot: '#FFB347', label: '🌅 Sunset', pipebody: '#8B4513', pipecap: '#6B3410' },
-      { score: 25, skyTop: '#0D0D2B', skyBot: '#191970', label: '🌙 Night',  pipebody: '#2E4057', pipecap: '#1A2A3A' },
-      { score: 50, skyTop: '#FF6B9D', skyBot: '#C8A2C8', label: '🌸 Dawn',   pipebody: '#7B2D8B', pipecap: '#5A1F6A' },
-      { score: 75, skyTop: '#2C3E50', skyBot: '#00CED1', label: '⛈ Storm',  pipebody: '#1B6CA8', pipecap: '#145280' },
+      { score: 0,  skyTop: '#4A148C', skyBot: '#FF7043', label: '🌅 Sunset', pipebody: '#00E676', pipecap: '#00C853' }, // Synthwave Sunset
+      { score: 10, skyTop: '#0B0F19', skyBot: '#2D1456', label: '🌃 Night',  pipebody: '#E040FB', pipecap: '#D500F9' }, // Cyberpunk Night
+      { score: 25, skyTop: '#F48FB1', skyBot: '#81D4FA', label: '🌸 Dawn',   pipebody: '#29B6F6', pipecap: '#039BE5' }, // Pastel Dawn
+      { score: 50, skyTop: '#1A237E', skyBot: '#00838F', label: '⛈ Storm',  pipebody: '#00E5FF', pipecap: '#00B8D4' }, // Neon Storm
+      { score: 75, skyTop: '#E65100', skyBot: '#FFD54F', label: '☀ Flare',   pipebody: '#FF3D00', pipecap: '#DD2C00' }, // Solar Flare
     ];
 
     // Canvas and context (resolved once at startup)
@@ -316,7 +394,12 @@
         );
       },
       update(score) {
-        this.currentSpeed = this.getSpeed(score);
+        // Apply slow-mo: override speed when active
+        if (gameState.slowMoActive) {
+          this.currentSpeed = Math.max(BASELINE_SPEED * 0.5, this.getSpeed(score) * 0.5);
+        } else {
+          this.currentSpeed = this.getSpeed(score);
+        }
         // Advance all active pipes horizontally and vertically
         for (let i = 0; i < PIPE_POOL_SIZE; i++) {
           const p = pipePool[i];
@@ -383,6 +466,8 @@
           pipe.vySpeed = 0;
           pipe.yMax    = 0;
         }
+        // ── Try spawning a power-up in the gap of this pipe ──
+        PowerUpSystem.trySpawn(pipe);
       },
       reset() {
         this.currentSpeed     = BASELINE_SPEED;
@@ -436,20 +521,16 @@
       },
     };
 
-    // AudioManager — wraps HTMLAudioElement instances with error-safe play helpers
+    // AudioManager — wraps HTMLAudioElement instances and Web Audio API for procedural sounds
     const AudioManager = {
       _jump:     null,
-      _score:    null,
-      _gameOver: null,
       _music:    null,
+      _audioCtx: null,
 
       init() {
         this._jump = new Audio('assets/jump.wav');
         this._jump.onerror = () => { this._jump = null; };
-        this._score = new Audio('assets/score.wav');
-        this._score.onerror = () => { this._score = null; };
-        this._gameOver = new Audio('assets/game_over.wav');
-        this._gameOver.onerror = () => { this._gameOver = null; };
+        
         // Try loading background music
         this._music = new Audio('assets/music.ogg');
         this._music.loop = true;
@@ -461,21 +542,113 @@
           this._music.volume = MUSIC_VOLUME;
           this._music.onerror = () => { this._music = null; };
         };
+
+        // Initialize Web Audio API for procedural sounds
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this._audioCtx = new AudioContext();
+        } catch (e) {
+          console.warn('Web Audio API not supported');
+        }
       },
+
+      _resumeAudioCtx() {
+        if (this._audioCtx && this._audioCtx.state === 'suspended') {
+          this._audioCtx.resume();
+        }
+      },
+
       _play(audio) {
         if (!audio || !gameState.audioEnabled) return;
         audio.currentTime = 0;
         const p = audio.play();
         if (p) p.catch(e => console.warn('Audio play failed:', e));
       },
+
       flap() {
         this._play(this._jump);
       },
+
       score() {
-        this._play(this._score);
+        if (!gameState.audioEnabled) return;
+        if (!this._audioCtx) return;
+        this._resumeAudioCtx();
+        const t = this._audioCtx.currentTime;
+        
+        // Classic coin-style satisfying chime
+        const osc = this._audioCtx.createOscillator();
+        const gain = this._audioCtx.createGain();
+        osc.type = 'sine'; // Clean chime
+        
+        osc.connect(gain);
+        gain.connect(this._audioCtx.destination);
+        
+        // Pitch envelope: B5 (987Hz) to E6 (1318Hz)
+        osc.frequency.setValueAtTime(987.77, t);
+        osc.frequency.setValueAtTime(1318.51, t + 0.08);
+        
+        // Volume envelope: quick attack, smooth release
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.15, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        
+        osc.start(t);
+        osc.stop(t + 0.35);
       },
+
       gameOver() {
-        this._play(this._gameOver);
+        if (!gameState.audioEnabled) return;
+        if (!this._audioCtx) return;
+        this._resumeAudioCtx();
+        const t = this._audioCtx.currentTime;
+        
+        // Punchy, heavy descending sawtooth wave
+        const osc = this._audioCtx.createOscillator();
+        const gain = this._audioCtx.createGain();
+        osc.type = 'sawtooth';
+        
+        osc.connect(gain);
+        gain.connect(this._audioCtx.destination);
+        
+        // Pitch envelope: starts high-ish, crashes down to a rumble
+        osc.frequency.setValueAtTime(200, t);
+        osc.frequency.exponentialRampToValueAtTime(20, t + 0.4);
+        
+        // Volume envelope: sharp attack, punchy decay
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.3, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+        
+        osc.start(t);
+        osc.stop(t + 0.5);
+      },
+
+      // ── Power-up pickup sound: a classic Mario-style rising arpeggio ──
+      powerUp() {
+        if (!gameState.audioEnabled) return;
+        if (!this._audioCtx) return;
+        this._resumeAudioCtx();
+        const t = this._audioCtx.currentTime;
+        
+        // Fast sequence of notes: G4, C5, E5, G5, C6, E6
+        const freqs = [392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51];
+        freqs.forEach((freq, i) => {
+          const osc = this._audioCtx.createOscillator();
+          const gain = this._audioCtx.createGain();
+          osc.type = 'square'; // Classic retro waveform
+          osc.connect(gain);
+          gain.connect(this._audioCtx.destination);
+          
+          const time = t + i * 0.05; // 50ms per note
+          osc.frequency.setValueAtTime(freq, time);
+          
+          gain.gain.setValueAtTime(0, time);
+          gain.gain.linearRampToValueAtTime(0.08, time + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+          
+          osc.start(time);
+          osc.stop(time + 0.15);
+        });
       },
       startMusic() {
         if (!this._music || !gameState.audioEnabled) return;
@@ -670,58 +843,85 @@
       },
     };
 
-    // ParallaxSystem — two independent layers of clouds for depth
+    // ParallaxSystem — Cyberpunk Cityscape with depth
     const ParallaxSystem = {
       layers: [
-        { speed: FAR_LAYER_SPEED,  alpha: FAR_LAYER_ALPHA,  clouds: [] },
-        { speed: NEAR_LAYER_SPEED, alpha: NEAR_LAYER_ALPHA, clouds: [] },
+        { speed: FAR_LAYER_SPEED,  alpha: 0.8, colorDay: '#7B1FA2', colorNight: '#1A237E', buildings: [] },
+        { speed: NEAR_LAYER_SPEED, alpha: 1.0, colorDay: '#4A148C', colorNight: '#0D47A1', buildings: [] },
       ],
 
       init(w, h) {
-        // Generate random clouds for each layer
         for (let l = 0; l < this.layers.length; l++) {
           const layer = this.layers[l];
-          layer.clouds = [];
-          const count = l === 0 ? 5 : 4; // far layer has more clouds
-          for (let i = 0; i < count; i++) {
-            layer.clouds.push({
-              x: Math.random() * w,
-              y: 30 + Math.random() * (h * 0.5),
-              rx: 30 + Math.random() * 40,
-              ry: 15 + Math.random() * 20,
-            });
+          layer.buildings = [];
+          let currentX = 0;
+          for (let i = 0; i < 20; i++) {
+            const bw = 30 + Math.random() * 50;
+            const bh = l === 0 ? 100 + Math.random() * 150 : 50 + Math.random() * 100;
+            
+            // Generate some windows
+            const windows = [];
+            if (Math.random() > 0.3) {
+              const rows = Math.floor(bh / 15);
+              const cols = Math.floor(bw / 12);
+              for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                  if (Math.random() > 0.4) {
+                    windows.push({
+                      x: c * 12 + 4,
+                      y: r * 15 + 10,
+                      w: 4 + Math.random() * 2,
+                      h: 6 + Math.random() * 4,
+                      blinkSpeed: 0.001 + Math.random() * 0.003,
+                      blinkOffset: Math.random() * Math.PI * 2
+                    });
+                  }
+                }
+              }
+            }
+
+            layer.buildings.push({ x: currentX, w: bw, h: bh, windows: windows });
+            currentX += bw;
           }
         }
       },
       update() {
         for (let l = 0; l < this.layers.length; l++) {
           const layer = this.layers[l];
-          for (let i = 0; i < layer.clouds.length; i++) {
-            const c = layer.clouds[i];
-            c.x -= layer.speed;
-            if (c.x + c.rx * 2 < 0) {
-              c.x = canvasW + c.rx;
-              c.y = 30 + Math.random() * (canvasH * 0.5);
-            }
+          for (let i = 0; i < layer.buildings.length; i++) {
+            const b = layer.buildings[i];
+            b.x -= layer.speed;
+          }
+          // Loop logic: if first building goes off screen, move to end
+          const first = layer.buildings[0];
+          if (first.x + first.w < 0) {
+            const last = layer.buildings[layer.buildings.length - 1];
+            first.x = last.x + last.w;
+            layer.buildings.push(layer.buildings.shift()); // move to end of array
           }
         }
       },
       draw(ctxRef) {
+        const time = Date.now();
         for (let l = 0; l < this.layers.length; l++) {
           const layer = this.layers[l];
-          ctxRef.globalAlpha = gameState.darkMode ? layer.alpha * 0.4 : layer.alpha;
-          ctxRef.fillStyle = gameState.darkMode ? '#445577' : '#FFFFFF';
-          for (let i = 0; i < layer.clouds.length; i++) {
-            const c = layer.clouds[i];
-            ctxRef.beginPath();
-            ctxRef.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, Math.PI * 2);
-            ctxRef.fill();
-            ctxRef.beginPath();
-            ctxRef.ellipse(c.x - c.rx * 0.5, c.y + c.ry * 0.3, c.rx * 0.7, c.ry * 0.8, 0, 0, Math.PI * 2);
-            ctxRef.fill();
-            ctxRef.beginPath();
-            ctxRef.ellipse(c.x + c.rx * 0.4, c.y + c.ry * 0.2, c.rx * 0.6, c.ry * 0.7, 0, 0, Math.PI * 2);
-            ctxRef.fill();
+          ctxRef.globalAlpha = layer.alpha;
+          ctxRef.fillStyle = gameState.darkMode ? layer.colorNight : layer.colorDay;
+          
+          for (let i = 0; i < layer.buildings.length; i++) {
+            const b = layer.buildings[i];
+            // Draw building body
+            ctxRef.fillRect(b.x, canvasH - SCORE_BAR_H - b.h, b.w, b.h);
+            
+            // Draw windows
+            for (let wIdx = 0; wIdx < b.windows.length; wIdx++) {
+              const win = b.windows[wIdx];
+              // Twinkle effect
+              const opacity = 0.3 + 0.7 * Math.abs(Math.sin(time * win.blinkSpeed + win.blinkOffset));
+              ctxRef.fillStyle = gameState.darkMode ? `rgba(0, 229, 255, ${opacity})` : `rgba(255, 235, 59, ${opacity})`; // Cyan night, Yellow day
+              ctxRef.fillRect(b.x + win.x, canvasH - SCORE_BAR_H - b.h + win.y, win.w, win.h);
+            }
+            ctxRef.fillStyle = gameState.darkMode ? layer.colorNight : layer.colorDay; // restore for next building
           }
         }
         ctxRef.globalAlpha = 1;
@@ -810,9 +1010,10 @@
       },
       drawStartOverlay(ctxRef, W, H, highScore, sfxOn) {
         const dm = gameState.darkMode;
-        const panelBg = dm ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)';
+        // Glassmorphism background for panels
+        const panelBg = dm ? 'rgba(30, 30, 50, 0.85)' : 'rgba(255, 255, 255, 0.85)';
         const textColor = '#FFFFFF';
-        const subtextColor = dm ? '#BBBBBB' : '#DDDDDD';
+        const subtextColor = dm ? '#DDDDDD' : '#444444';
 
         // Title with glow effect
         ctxRef.shadowColor = '#7C4DFF';
@@ -828,13 +1029,62 @@
         ctxRef.fillStyle = '#B39DDB';
         ctxRef.fillText('~ dodge the pipes, chase the score ~', W / 2, 92);
 
-        // Instructions panel with rounded look
+        // Instructions panel with sleek border
         ctxRef.fillStyle = panelBg;
         this._roundRect(ctxRef, 50, 260, 380, 100, 10);
         ctxRef.fill();
-        ctxRef.strokeStyle = 'rgba(255,255,255,0.1)';
-        ctxRef.lineWidth = 1;
+        ctxRef.strokeStyle = 'rgba(0,229,255,0.4)'; // Cyan accent
+        ctxRef.lineWidth = 2;
         ctxRef.stroke();
+
+        // ── Avatar backdrop: draw a dark circle behind the ghost so it's always visible
+        // The ghost is rendered at canvasW*0.25 (=120), vertically centered in the panel (y=310).
+        ctxRef.save();
+        ctxRef.shadowColor = 'rgba(124, 77, 255, 0.6)';
+        ctxRef.shadowBlur  = 12;
+        ctxRef.fillStyle   = 'rgba(20, 20, 40, 0.75)'; // dark semi-transparent disc
+        ctxRef.beginPath();
+        ctxRef.arc(95, 310, 26, 0, Math.PI * 2);
+        ctxRef.fill();
+        ctxRef.restore();
+
+        // ── Avatar rendering for instructions panel
+        // We draw the avatar manually here so it uses the currently active skin.
+        const useDeath = false;
+        const spriteToUse = (gameState.activeAvatar === 'custom' && ghosty.sprite) ? ghosty.sprite : ghostyImg;
+        if (spriteToUse) {
+           ctxRef.save();
+           ctxRef.translate(95, 310);
+           const hw = SPRITE_DST_W / 2;
+           const hh = SPRITE_DST_H / 2;
+           if (gameState.activeAvatar === 'custom') {
+              ctxRef.beginPath();
+              ctxRef.moveTo(-hw, hh);
+              ctxRef.lineTo(-hw, -hh * 0.2);
+              ctxRef.quadraticCurveTo(-hw, -hh, 0, -hh);
+              ctxRef.quadraticCurveTo(hw, -hh, hw, -hh * 0.2);
+              ctxRef.lineTo(hw, hh);
+              ctxRef.lineTo(hw * 0.5, hh * 0.7);
+              ctxRef.lineTo(0, hh);
+              ctxRef.lineTo(-hw * 0.5, hh * 0.7);
+              ctxRef.closePath();
+              ctxRef.clip();
+              const srcW = spriteToUse.naturalWidth || spriteToUse.width;
+              const srcH = spriteToUse.naturalHeight || spriteToUse.height;
+              if (srcW > 0 && srcH > 0) {
+                 ctxRef.drawImage(spriteToUse, 0, 0, srcW, srcH, -hw, -hh, SPRITE_DST_W, SPRITE_DST_H);
+              }
+           } else {
+              // Draw default ghost frame from sprite sheet
+              if (ghostySpriteSheet) {
+                 ctxRef.drawImage(ghostySpriteSheet, 2 * SPRITE_DST_W, 0, SPRITE_DST_W, SPRITE_DST_H, -hw, -hh, SPRITE_DST_W, SPRITE_DST_H);
+              } else if (spriteToUse.naturalWidth > 0) { // Fallback if sprite sheet not ready
+                 ctxRef.drawImage(spriteToUse, 0, 0, spriteToUse.naturalWidth, spriteToUse.naturalHeight, -hw, -hh, SPRITE_DST_W, SPRITE_DST_H);
+              }
+           }
+           ctxRef.restore();
+        }
+
         ctxRef.font = '8px "Press Start 2P", monospace';
         ctxRef.fillStyle = subtextColor;
         ctxRef.textAlign = 'center';
@@ -843,70 +1093,86 @@
         ctxRef.fillText('Pass pipes to score', W / 2, 325);
         ctxRef.fillText('Avoid walls & floor', W / 2, 345);
 
-        // ── PLAY button (gradient green)
-        const playGrad = ctxRef.createLinearGradient(160, 375, 160, 420);
-        playGrad.addColorStop(0, '#66BB6A');
-        playGrad.addColorStop(1, '#388E3C');
+        // ── PLAY button (neon glowing green)
+        ctxRef.save();
+        const playGrad = ctxRef.createLinearGradient(150, 370, 150, 420);
+        playGrad.addColorStop(0, '#00E676');
+        playGrad.addColorStop(1, '#00C853');
         ctxRef.fillStyle = playGrad;
-        this._roundRect(ctxRef, 160, 375, 160, 44, 8);
+        ctxRef.shadowColor = 'rgba(0, 230, 118, 0.6)';
+        ctxRef.shadowBlur = 15;
+        this._roundRect(ctxRef, 150, 370, 180, 50, 10);
         ctxRef.fill();
-        ctxRef.strokeStyle = 'rgba(255,255,255,0.3)';
-        ctxRef.lineWidth = 1;
+        ctxRef.shadowBlur = 0;
+        ctxRef.strokeStyle = '#B9F6CA';
+        ctxRef.lineWidth = 2;
         ctxRef.stroke();
         ctxRef.fillStyle = '#FFFFFF';
-        ctxRef.font = '12px "Press Start 2P", monospace';
+        ctxRef.font = '14px "Press Start 2P", monospace';
+        ctxRef.shadowColor = '#000000';
+        ctxRef.shadowBlur = 4;
         ctxRef.fillText('\u25B6 PLAY', W / 2, 403);
+        ctxRef.restore();
 
         // ── SFX toggle button
-        ctxRef.fillStyle = sfxOn ? '#5C6BC0' : '#555555';
-        this._roundRect(ctxRef, 160, 430, 160, 34, 8);
+        ctxRef.fillStyle = sfxOn ? '#3F51B5' : '#424242';
+        this._roundRect(ctxRef, 160, 435, 160, 34, 8);
         ctxRef.fill();
+        ctxRef.strokeStyle = sfxOn ? '#8C9EFF' : '#757575';
+        ctxRef.lineWidth = 2;
+        ctxRef.stroke();
         ctxRef.fillStyle = '#FFFFFF';
         ctxRef.font = '9px "Press Start 2P", monospace';
-        ctxRef.fillText(sfxOn ? '\uD83D\uDD0A SFX ON' : '\uD83D\uDD07 SFX OFF', W / 2, 451);
+        ctxRef.fillText(sfxOn ? '\uD83D\uDD0A SFX ON' : '\uD83D\uDD07 SFX OFF', W / 2, 456);
 
         // ── Avatar section — show current + toggle if custom exists
         ctxRef.fillStyle = panelBg;
-        this._roundRect(ctxRef, 100, 472, 280, 75, 8);
+        this._roundRect(ctxRef, 100, 480, 280, 75, 8);
         ctxRef.fill();
+        ctxRef.strokeStyle = 'rgba(255, 213, 79, 0.4)'; // Gold accent
+        ctxRef.stroke();
 
         // Avatar label
         ctxRef.font = '7px "Press Start 2P", monospace';
         ctxRef.fillStyle = subtextColor;
-        ctxRef.fillText('AVATAR', W / 2, 486);
+        ctxRef.fillText('SKINS', W / 2, 494);
 
         if (gameState.hasCustomAvatar) {
           // Two selectable options side by side
           const ghostActive = gameState.activeAvatar === 'ghost';
           ctxRef.fillStyle = ghostActive ? '#7C4DFF' : '#444444';
-          this._roundRect(ctxRef, 115, 492, 110, 28, 6);
+          this._roundRect(ctxRef, 115, 500, 110, 28, 6);
           ctxRef.fill();
+          if(ghostActive) { ctxRef.strokeStyle='#E040FB'; ctxRef.stroke(); }
           ctxRef.fillStyle = '#FFFFFF';
           ctxRef.font = '7px "Press Start 2P", monospace';
-          ctxRef.fillText('\uD83D\uDC7B Ghost', 170, 510);
+          ctxRef.fillText('\uD83D\uDC7B Ghost', 170, 518);
 
           const customActive = gameState.activeAvatar === 'custom';
           ctxRef.fillStyle = customActive ? '#7C4DFF' : '#444444';
-          this._roundRect(ctxRef, 255, 492, 110, 28, 6);
+          this._roundRect(ctxRef, 255, 500, 110, 28, 6);
           ctxRef.fill();
+          if(customActive) { ctxRef.strokeStyle='#E040FB'; ctxRef.stroke(); }
           ctxRef.fillStyle = '#FFFFFF';
-          ctxRef.fillText('\uD83C\uDFA8 Custom', 310, 510);
+          ctxRef.fillText('\uD83C\uDFA8 Custom', 310, 518);
 
-          // Change avatar button (below selector)
+          // Skin Gallery button (below selector)
           ctxRef.fillStyle = '#2196F3';
-          this._roundRect(ctxRef, 160, 524, 160, 20, 5);
+          this._roundRect(ctxRef, 160, 532, 160, 20, 5);
           ctxRef.fill();
           ctxRef.fillStyle = '#FFFFFF';
           ctxRef.font = '6px "Press Start 2P", monospace';
-          ctxRef.fillText('\uD83D\uDCC1 Change Avatar', W / 2, 537);
+          ctxRef.fillText('\uD83C\uDFA8 Skin Gallery', W / 2, 545);
         } else {
-          // Only upload button
+          // Only gallery button
           ctxRef.fillStyle = '#2196F3';
-          this._roundRect(ctxRef, 140, 495, 200, 28, 6);
+          this._roundRect(ctxRef, 140, 505, 200, 35, 8);
           ctxRef.fill();
+          ctxRef.strokeStyle = '#64B5F6';
+          ctxRef.stroke();
           ctxRef.fillStyle = '#FFFFFF';
           ctxRef.font = '8px "Press Start 2P", monospace';
-          ctxRef.fillText('\uD83D\uDCC1 Upload Avatar', W / 2, 513);
+          ctxRef.fillText('\uD83C\uDFA8 Skin Gallery', W / 2, 526);
         }
 
         // ── Dark/Light mode toggle (top-left)
@@ -920,7 +1186,19 @@
         ctxRef.textAlign = 'center';
         ctxRef.fillText(dm ? '\u263D' : '\u2600', 34, 31);
 
-        // ── Disclaimer button (top-right)
+        // ── Mechanics & Features button (positioned below subtitle for clean layout)
+        ctxRef.fillStyle = dm ? '#1A237E' : '#263238';
+        this._roundRect(ctxRef, W / 2 - 70, 108, 140, 26, 6);
+        ctxRef.fill();
+        ctxRef.strokeStyle = '#00E5FF';
+        ctxRef.lineWidth = 1.5;
+        ctxRef.stroke();
+        ctxRef.font = '7px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#00E5FF';
+        ctxRef.textAlign = 'center';
+        ctxRef.fillText('\u2699 MECHANICS', W / 2, 125);
+
+        // ── Disclaimer / Info button (top-right)
         ctxRef.fillStyle = dm ? '#333333' : '#EEEEEE';
         this._roundRect(ctxRef, W - 56, 12, 44, 28, 6);
         ctxRef.fill();
@@ -935,7 +1213,7 @@
         ctxRef.font = '10px "Press Start 2P", monospace';
         ctxRef.fillStyle = '#FFD54F';
         ctxRef.textAlign = 'center';
-        ctxRef.fillText('\uD83C\uDFC6 Best: ' + highScore, W / 2, 565);
+        ctxRef.fillText('\uD83C\uDFC6 Best: ' + highScore, W / 2, 590);
       },
 
       // Helper: draw a rounded rectangle path
@@ -960,65 +1238,157 @@
         ctxRef.fillStyle = '#FFFFFF';
         ctxRef.fillRect(22, 20, 5, 20);
         ctxRef.fillRect(33, 20, 5, 20);
+
+        // ── Combo counter removed per user request ──
+
+        // ── Active Power-Up HUD (left side, stacked vertically) ──
+        let puY = 60; // start Y for first power-up indicator
+        const puW = 100; const puH = 20;
+        const drawPowerUpIndicator = (icon, label, timer, maxTimer, color) => {
+          const ratio = Math.max(0, timer / maxTimer);
+          // Background bar
+          ctxRef.fillStyle = 'rgba(0,0,0,0.5)';
+          this._roundRect(ctxRef, 8, puY, puW, puH, 4);
+          ctxRef.fill();
+          // Timer fill bar
+          ctxRef.fillStyle = color;
+          this._roundRect(ctxRef, 8, puY, puW * ratio, puH, 4);
+          ctxRef.fill();
+          // Icon + label text
+          ctxRef.font = '7px "Press Start 2P", monospace';
+          ctxRef.textAlign = 'left';
+          ctxRef.fillStyle = '#FFFFFF';
+          ctxRef.fillText(`${icon} ${label}`, 12, puY + 14);
+          puY += puH + 4;
+        };
+
+        if (gameState.shieldActive) {
+          drawPowerUpIndicator('\uD83D\uDEE1\uFE0F', 'SHIELD', 1, 1, '#00E5FF'); // Shield shows solid (no timer)
+        }
+        if (gameState.slowMoActive) {
+          drawPowerUpIndicator('\u23F1\uFE0F', 'SLOW-MO', gameState.slowMoTimer, 5000, '#FF9800');
+        }
+        if (gameState.multiplierActive) {
+          drawPowerUpIndicator('\uD83C\uDF1F', '2x SCORE', gameState.multiplierTimer, 8000, '#FFD54F');
+        }
+        if (gameState.miniActive) {
+          drawPowerUpIndicator('\uD83D\uDC23', 'MINI', gameState.miniTimer, 5000, '#76FF03');
+        }
       },
       drawPauseOverlay(ctxRef, W, H) {
         ctxRef.fillStyle = 'rgba(0, 0, 0, 0.65)';
         ctxRef.fillRect(0, 0, W, H);
         // Pause icon
         ctxRef.fillStyle = '#FFFFFF';
-        ctxRef.fillRect(W / 2 - 18, H / 2 - 50, 12, 36);
-        ctxRef.fillRect(W / 2 + 6, H / 2 - 50, 12, 36);
+        ctxRef.fillRect(W / 2 - 18, H / 2 - 80, 12, 36);
+        ctxRef.fillRect(W / 2 + 6, H / 2 - 80, 12, 36);
         // Text
         ctxRef.font = '16px "Press Start 2P", monospace';
         ctxRef.fillStyle = '#FFFFFF';
         ctxRef.textAlign = 'center';
-        ctxRef.fillText('PAUSED', W / 2, H / 2 + 10);
+        ctxRef.fillText('PAUSED', W / 2, H / 2 - 10);
         ctxRef.font = '8px "Press Start 2P", monospace';
         ctxRef.fillStyle = '#AAAAAA';
-        ctxRef.fillText('P / Escape to Resume', W / 2, H / 2 + 35);
+        ctxRef.fillText('P / Escape to Resume', W / 2, H / 2 + 10);
+
+        // Menu Buttons
+        const drawBtn = (label, y, color) => {
+          ctxRef.fillStyle = color;
+          this._roundRect(ctxRef, 140, y, 200, 40, 8);
+          ctxRef.fill();
+          ctxRef.strokeStyle = 'rgba(255,255,255,0.3)';
+          ctxRef.lineWidth = 1.5;
+          ctxRef.stroke();
+          ctxRef.fillStyle = '#FFFFFF';
+          ctxRef.font = '10px "Press Start 2P", monospace';
+          ctxRef.fillText(label, W / 2, y + 25);
+        };
+        drawBtn('\u25B6 RESUME', 350, '#2196F3');
+        drawBtn('\u21BB RESTART', 402, '#FF9800');
+        drawBtn('\uD83C\uDFE0 MAIN MENU', 454, '#424242');
       },
       drawGameOverOverlay(ctxRef, W, H, score) {
+        // Fade-in animation factor (0 to 1 over 800ms)
+        const elapsed = Date.now() - gameState.shakeStart;
+        const fade = Math.min(1, Math.max(0, (elapsed - 200) / 800)); // starts fading after 200ms
+        
+        ctxRef.save();
+        ctxRef.globalAlpha = fade;
+
         // Semi-transparent dark overlay
-        ctxRef.fillStyle = 'rgba(0, 0, 0, 0.55)';
+        ctxRef.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctxRef.fillRect(0, 0, W, H);
+        
         // Red glow title
-        ctxRef.shadowColor = '#FF0000';
-        ctxRef.shadowBlur = 15;
-        ctxRef.font = '20px "Press Start 2P", monospace';
-        ctxRef.fillStyle = '#FF4444';
+        ctxRef.shadowColor = '#FF0055';
+        ctxRef.shadowBlur = 20;
+        ctxRef.font = '24px "Press Start 2P", monospace';
+        ctxRef.fillStyle = '#FF1744';
         ctxRef.textAlign = 'center';
-        ctxRef.fillText('GAME OVER', W / 2, H / 2 - 70);
+        ctxRef.fillText('GAME OVER', W / 2, H / 2 - 80);
         ctxRef.shadowBlur = 0;
-        // Score display
+        
+        // Score display panel (glassmorphism)
+        ctxRef.fillStyle = 'rgba(20, 20, 30, 0.8)';
+        this._roundRect(ctxRef, W / 2 - 100, H / 2 - 50, 200, 60, 10);
+        ctxRef.fill();
+        ctxRef.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctxRef.lineWidth = 1;
+        ctxRef.stroke();
+
         ctxRef.font = '12px "Press Start 2P", monospace';
         ctxRef.fillStyle = '#FFD54F';
-        ctxRef.fillText('Score: ' + score, W / 2, H / 2 - 30);
-        // High score indication
+        ctxRef.fillText('Score: ' + score, W / 2, H / 2 - 25);
+        
+        // High score indication with pulsing animation
         if (score >= gameState.highScore && score > 0) {
-          ctxRef.fillStyle = '#FF6F00';
+          const pulse = 1 + 0.1 * Math.sin(Date.now() / 150);
+          ctxRef.save();
+          ctxRef.translate(W / 2, H / 2 - 5);
+          ctxRef.scale(pulse, pulse);
+          ctxRef.shadowColor = '#FF6F00';
+          ctxRef.shadowBlur = 10;
+          ctxRef.fillStyle = '#FF9100';
           ctxRef.font = '9px "Press Start 2P", monospace';
-          ctxRef.fillText('\u2B50 NEW BEST! \u2B50', W / 2, H / 2 - 5);
+          ctxRef.fillText('\u2B50 NEW BEST! \u2B50', 0, 0);
+          ctxRef.restore();
+        }
+        // Night mode reward unlock notification
+        if (gameState.nightRewardJustUnlocked) {
+          ctxRef.shadowColor = '#FFD54F';
+          ctxRef.shadowBlur = 10;
+          ctxRef.font = '8px "Press Start 2P", monospace';
+          ctxRef.fillStyle = '#FFD54F';
+          ctxRef.fillText('\uD83C\uDF19 Lunar Kiro Unlocked!', W / 2, H / 2 + 12);
+          ctxRef.shadowBlur = 0;
         }
         // Play Again button
-        const playAgainGrad = ctxRef.createLinearGradient(140, H / 2 + 20, 140, H / 2 + 60);
-        playAgainGrad.addColorStop(0, '#66BB6A');
-        playAgainGrad.addColorStop(1, '#388E3C');
+        const playAgainGrad = ctxRef.createLinearGradient(130, H / 2 + 30, 130, H / 2 + 75);
+        playAgainGrad.addColorStop(0, '#00E676');
+        playAgainGrad.addColorStop(1, '#00C853');
         ctxRef.fillStyle = playAgainGrad;
-        this._roundRect(ctxRef, 140, H / 2 + 20, 200, 40, 8);
+        ctxRef.shadowColor = 'rgba(0, 230, 118, 0.4)';
+        ctxRef.shadowBlur = 15;
+        this._roundRect(ctxRef, 130, H / 2 + 30, 220, 45, 12);
         ctxRef.fill();
+        ctxRef.shadowBlur = 0;
         ctxRef.fillStyle = '#FFFFFF';
-        ctxRef.font = '10px "Press Start 2P", monospace';
-        ctxRef.fillText('\u25B6 Play Again', W / 2, H / 2 + 46);
+        ctxRef.font = '12px "Press Start 2P", monospace';
+        ctxRef.fillText('\u25B6 Play Again', W / 2, H / 2 + 58);
+        
         // Main Menu button
-        ctxRef.fillStyle = '#5C6BC0';
-        this._roundRect(ctxRef, 140, H / 2 + 72, 200, 40, 8);
+        ctxRef.fillStyle = 'rgba(92, 107, 192, 0.9)';
+        this._roundRect(ctxRef, 130, H / 2 + 85, 220, 40, 10);
         ctxRef.fill();
         ctxRef.fillStyle = '#FFFFFF';
         ctxRef.font = '10px "Press Start 2P", monospace';
-        ctxRef.fillText('\u2302 Main Menu', W / 2, H / 2 + 98);
+        ctxRef.fillText('\u2302 Main Menu', W / 2, H / 2 + 110);
+
+        ctxRef.restore(); // end fade-in alpha
       },
-      spawnPopup(x, y) {
-        this._popups.push({ x: x, y: y, originY: y, age: 0, lifetime: POPUP_LIFETIME });
+      spawnPopup(x, y, pts) {
+        // Show a score popup with the actual points awarded (accounts for combo/multiplier)
+        this._popups.push({ x: x, y: y, originY: y, age: 0, lifetime: POPUP_LIFETIME, pts: pts || 1 });
       },
       updatePopups(dt) {
         for (let i = this._popups.length - 1; i >= 0; i--) {
@@ -1032,17 +1402,19 @@
         }
       },
       drawPopups(ctxRef) {
-        ctxRef.font = 'bold 16px "Press Start 2P", monospace';
         ctxRef.textAlign = 'center';
         for (let i = 0; i < this._popups.length; i++) {
           const p = this._popups[i];
           const opacity = 1 - p.age / p.lifetime;
+          const label = p.pts > 1 ? `+${p.pts}` : '+1';
+          const color  = p.pts >= 6 ? '#FF5722' : p.pts >= 3 ? '#FFD54F' : '#FFFFFF';
           ctxRef.globalAlpha = opacity;
+          ctxRef.font = p.pts > 1 ? 'bold 18px "Press Start 2P", monospace' : 'bold 16px "Press Start 2P", monospace';
           ctxRef.strokeStyle = '#000000';
           ctxRef.lineWidth = 2;
-          ctxRef.strokeText('+1', p.x, p.y);
-          ctxRef.fillStyle = '#FFFFFF';
-          ctxRef.fillText('+1', p.x, p.y);
+          ctxRef.strokeText(label, p.x, p.y);
+          ctxRef.fillStyle = color;
+          ctxRef.fillText(label, p.x, p.y);
         }
         ctxRef.globalAlpha = 1;
       },
@@ -1055,22 +1427,27 @@
     const InputHandler = {
       // Pre-declared button bounds — no per-event allocation
       buttonRegions: {
-        play:            { x: 160, y: 375, w: 160, h: 44 },
-        soundToggle:     { x: 160, y: 430, w: 160, h: 34 },
-        uploadCharacter: { x: 140, y: 495, w: 200, h: 28 },
-        changeAvatar:    { x: 160, y: 524, w: 160, h: 20 },
-        avatarGhost:     { x: 115, y: 492, w: 110, h: 28 },
-        avatarCustom:    { x: 255, y: 492, w: 110, h: 28 },
+        play:            { x: 150, y: 370, w: 180, h: 50 },
+        soundToggle:     { x: 160, y: 435, w: 160, h: 34 },
+        uploadCharacter: { x: 140, y: 505, w: 200, h: 35 },
+        changeAvatar:    { x: 160, y: 532, w: 160, h: 20 },
+        avatarGhost:     { x: 115, y: 500, w: 110, h: 28 },
+        avatarCustom:    { x: 255, y: 500, w: 110, h: 28 },
         darkModeToggle:  { x: 12,  y: 12,  w: 44,  h: 28 },
+        mechanicsButton: { x: 170, y: 108, w: 140, h: 26 },
         pauseButton:     { x: 12,  y: 12,  w: 36,  h: 36 },
         disclaimerButton:{ x: 424, y: 12,  w: 44,  h: 28 },
         // Game Over screen buttons (positions relative to canvasH/2 = 320)
         playAgain:       { x: 140, y: 340, w: 200, h: 40 },
         mainMenu:        { x: 140, y: 392, w: 200, h: 40 },
+        // Pause screen buttons
+        pauseResume:     { x: 140, y: 350, w: 200, h: 40 },
+        pauseRestart:    { x: 140, y: 402, w: 200, h: 40 },
+        pauseMainMenu:   { x: 140, y: 454, w: 200, h: 40 },
       },
 
       init(canvasRef, callbacks) {
-        const { onFlap, onPause, onToggleAudio, onOpenUpload, onToggleDarkMode, onSelectAvatar, onMainMenu, onShowDisclaimer } = callbacks;
+        const { onFlap, onPause, onToggleAudio, onOpenUpload, onToggleDarkMode, onSelectAvatar, onMainMenu, onShowMechanics, onShowDisclaimer } = callbacks;
 
         window.addEventListener('keydown', (e) => {
           if (e.code === 'Space') { e.preventDefault(); onFlap(); }
@@ -1084,7 +1461,25 @@
               onPause(); return true;
             }
           }
+          if (gameState.phase === 'PAUSED') {
+            if (this.hitTest(px, py, this.buttonRegions.pauseResume)) {
+              onPause(); return true;
+            }
+            if (this.hitTest(px, py, this.buttonRegions.pauseRestart)) {
+              resetSession();
+              gameState.phase = 'PLAYING';
+              AudioManager.startMusic();
+              return true;
+            }
+            if (this.hitTest(px, py, this.buttonRegions.pauseMainMenu)) {
+              onMainMenu(); return true;
+            }
+          }
           if (gameState.phase === 'IDLE') {
+            if (this.hitTest(px, py, this.buttonRegions.mechanicsButton)) {
+              if (onShowMechanics) onShowMechanics();
+              return true;
+            }
             if (this.hitTest(px, py, this.buttonRegions.disclaimerButton)) {
               if (onShowDisclaimer) onShowDisclaimer();
               return true;
@@ -1113,11 +1508,15 @@
           }
           if (gameState.phase === 'GAME_OVER') {
             if (this.hitTest(px, py, this.buttonRegions.playAgain)) {
-              onFlap(); return true; // Play Again = restart game
+              resetSession();
+              gameState.phase = 'PLAYING';
+              AudioManager.startMusic();
+              return true; // Play Again = restart game
             }
             if (this.hitTest(px, py, this.buttonRegions.mainMenu)) {
               onMainMenu(); return true; // Go back to start screen
             }
+            return true; // Block click from triggering onFlap in game over
           }
           return false;
         };
@@ -1190,9 +1589,28 @@
             ParticleSystem.update(FRAME_MS);
             AnimationSystem.update(FRAME_MS, ghosty.vy);
             HUD.updatePopups(FRAME_MS);
+
+            // ── Update invincibility frames ──
+            if (gameState.invincible && gameState.invincibilityStart) {
+              const elapsedInv = Date.now() - gameState.invincibilityStart;
+              if (elapsedInv > 1500) { // 1.5s invulnerability after shield break
+                gameState.invincible = false;
+                gameState.invincibilityStart = null;
+                ghosty.visible = true;
+              } else {
+                // Blink ghosty every 100ms while invincible
+                ghosty.visible = Math.floor(elapsedInv / 100) % 2 === 0;
+              }
+            }
+
             const hit = CollisionDetector.check(ghosty, pipePool, canvas, SCORE_BAR_H);
             handleCollision(hit);
             checkScoring();
+            // Near-miss detection: check proximity to pipes and update glow timer
+            NearMissDetector.check(ghosty, pipePool);
+            NearMissDetector.update(FRAME_MS);
+            // \u2500\u2500 Power-up system: update positions, pickup collision, timers \u2500\u2500
+            PowerUpSystem.update(FRAME_MS, ghosty, Scroller.currentSpeed);
             updateScreenShake(timestamp);
           }
 
@@ -1215,6 +1633,491 @@
     };
 
 
+    // ── SKIN GALLERY SUBSYSTEM ───────────────────────────────────────────────
+    // Manages multiple uploaded skins with optional death sprites.
+    // Each skin: { id: string, mainSprite: dataURL, deathSprite: dataURL|null, name: string }
+    // The gallery is rendered in the #skinGalleryModal HTML overlay.
+
+    const SkinGallery = {
+      skins: [],           // array of skin objects
+      _loadedImages: {},   // { skinId: { main: Image, death: Image|null } }
+
+      // ── Persistence ──
+
+      load() {
+        // Load gallery from localStorage
+        try {
+          const raw = localStorage.getItem(SKIN_GALLERY_KEY);
+          if (raw) this.skins = JSON.parse(raw);
+        } catch { this.skins = []; }
+        // Migrate legacy single custom sprite into the gallery
+        try {
+          const legacy = localStorage.getItem(CUSTOM_SPRITE_KEY);
+          if (legacy && !this.skins.find(s => s.id === 'legacy')) {
+            this.skins.push({ id: 'legacy', mainSprite: legacy, deathSprite: null, name: 'Custom 1' });
+            this._save();
+          }
+        } catch { /* silent */ }
+        // Load night reward status
+        try { gameState.nightRewardUnlocked = localStorage.getItem(NIGHT_REWARD_KEY) === 'true'; } catch { /* silent */ }
+        // Pre-load all skin images into memory
+        this.skins.forEach(s => this._preloadSkin(s));
+      },
+
+      _save() {
+        try { localStorage.setItem(SKIN_GALLERY_KEY, JSON.stringify(this.skins)); } catch { /* silent */ }
+      },
+
+      _preloadSkin(skin) {
+        const entry = { main: null, death: null };
+        if (skin.mainSprite) {
+          const img = new Image();
+          img.onload = () => { entry.main = img; };
+          img.src = skin.mainSprite;
+        }
+        if (skin.deathSprite) {
+          const img = new Image();
+          img.onload = () => { entry.death = img; };
+          img.src = skin.deathSprite;
+        }
+        this._loadedImages[skin.id] = entry;
+      },
+
+      // ── Add / Remove skins ──
+
+      addSkin(mainDataURL, name) {
+        const id = 'skin_' + Date.now();
+        const skin = { id, mainSprite: mainDataURL, deathSprite: null, name: name || ('Skin ' + (this.skins.length + 1)) };
+        this.skins.push(skin);
+        this._preloadSkin(skin);
+        this._save();
+        return id;
+      },
+
+      setDeathSprite(skinId, deathDataURL) {
+        const skin = this.skins.find(s => s.id === skinId);
+        if (!skin) return;
+        skin.deathSprite = deathDataURL;
+        // Re-preload the death image
+        const entry = this._loadedImages[skinId] || { main: null, death: null };
+        const img = new Image();
+        img.onload = () => { entry.death = img; };
+        img.src = deathDataURL;
+        this._loadedImages[skinId] = entry;
+        this._save();
+      },
+
+      removeSkin(skinId) {
+        this.skins = this.skins.filter(s => s.id !== skinId);
+        delete this._loadedImages[skinId];
+        this._save();
+      },
+
+      // ── Selection ──
+
+      selectSkin(skinId) {
+        const entry = this._loadedImages[skinId];
+        if (!entry || !entry.main) return;
+        gameState.activeAvatar = 'custom';
+        gameState.activeSkinId = skinId;
+        gameState.hasCustomAvatar = true;
+        customSpriteImg = entry.main;
+        ghosty.sprite = entry.main;
+        ghosty.deathSprite = entry.death || null;
+        ghosty.isCustomSprite = true;
+        try {
+          localStorage.setItem(AVATAR_KEY, 'custom');
+          localStorage.setItem(ACTIVE_SKIN_KEY, skinId);
+        } catch { /* silent */ }
+      },
+
+      getActiveDeathSprite() {
+        if (!gameState.activeSkinId) return null;
+        const entry = this._loadedImages[gameState.activeSkinId];
+        return entry ? entry.death : null;
+      },
+
+      // ── Gallery UI rendering ──
+
+      renderGalleryUI() {
+        const container = document.getElementById('galleryList');
+        if (!container) return;
+        container.innerHTML = '';
+
+        // Default ghost slot
+        const ghostSlot = this._createSlot('👻 Ghost', null, gameState.activeAvatar === 'ghost', () => {
+          selectAvatar('ghost');
+          this.renderGalleryUI();
+        });
+        container.appendChild(ghostSlot);
+
+        // User-uploaded skins
+        this.skins.forEach(skin => {
+          const isActive = (gameState.activeSkinId === skin.id && gameState.activeAvatar === 'custom');
+          const slot = this._createSlot(skin.name, skin.mainSprite, isActive, () => {
+            this.selectSkin(skin.id);
+            this.renderGalleryUI();
+          }, skin.id);
+          container.appendChild(slot);
+        });
+
+        // Night reward slot (locked/unlocked)
+        const rewardSlot = this._createRewardSlot();
+        container.appendChild(rewardSlot);
+
+        // Show/hide "Upload Death Sprite" button based on active custom skin
+        const deathBtn = document.getElementById('uploadDeathSpriteBtn');
+        if (deathBtn) {
+          deathBtn.style.display = (gameState.activeAvatar === 'custom' && gameState.activeSkinId) ? 'inline-block' : 'none';
+        }
+      },
+
+      _createSlot(label, imgSrc, isActive, onClick, skinId) {
+        const div = document.createElement('div');
+        div.style.cssText = 'width:60px; height:70px; border:2px solid ' + (isActive ? '#7C4DFF' : '#555') + '; border-radius:8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); position:relative;';
+        if (isActive) div.style.boxShadow = '0 0 8px #7C4DFF';
+        if (imgSrc) {
+          const img = document.createElement('img');
+          img.src = imgSrc;
+          img.style.cssText = 'width:36px; height:36px; image-rendering:pixelated; border-radius:4px;';
+          div.appendChild(img);
+        } else {
+          const txt = document.createElement('span');
+          txt.textContent = label.substring(0, 2);
+          txt.style.cssText = 'font-size:20px;';
+          div.appendChild(txt);
+        }
+        const lbl = document.createElement('span');
+        lbl.textContent = label.length > 8 ? label.substring(0, 7) + '…' : label;
+        lbl.style.cssText = 'font-size:6px; font-family:\"Press Start 2P\", monospace; color:#CCC; margin-top:2px;';
+        div.appendChild(lbl);
+
+        // Delete button for user skins (not reward or ghost)
+        if (skinId && skinId !== 'reward_lunar') {
+          const del = document.createElement('span');
+          del.textContent = '×';
+          del.style.cssText = 'position:absolute; top:1px; right:3px; font-size:10px; color:#E53935; cursor:pointer; line-height:1;';
+          del.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.removeSkin(skinId);
+            if (gameState.activeSkinId === skinId) selectAvatar('ghost');
+            this.renderGalleryUI();
+          });
+          div.appendChild(del);
+        }
+
+        div.addEventListener('click', onClick);
+        return div;
+      },
+
+      _createRewardSlot() {
+        const div = document.createElement('div');
+        const unlocked = gameState.nightRewardUnlocked;
+        div.style.cssText = 'width:60px; height:70px; border:2px solid ' + (unlocked ? '#FFD54F' : '#333') + '; border-radius:8px; cursor:' + (unlocked ? 'pointer' : 'not-allowed') + '; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); position:relative;';
+        if (!unlocked) div.style.opacity = '0.5';
+
+        const icon = document.createElement('span');
+        icon.textContent = unlocked ? '🌙' : '🔒';
+        icon.style.cssText = 'font-size:20px;';
+        div.appendChild(icon);
+
+        const lbl = document.createElement('span');
+        lbl.textContent = unlocked ? 'Lunar' : 'Locked';
+        lbl.style.cssText = 'font-size:6px; font-family:\"Press Start 2P\", monospace; color:' + (unlocked ? '#FFD54F' : '#666') + '; margin-top:2px;';
+        div.appendChild(lbl);
+
+        if (unlocked) {
+          const isActive = (gameState.activeSkinId === 'reward_lunar' && gameState.activeAvatar === 'custom');
+          if (isActive) {
+            div.style.border = '2px solid #7C4DFF';
+            div.style.boxShadow = '0 0 8px #7C4DFF';
+          }
+          div.addEventListener('click', () => {
+            this.selectSkin('reward_lunar');
+            this.renderGalleryUI();
+          });
+        }
+        return div;
+      },
+
+      // ── Night mode reward ──
+
+      generateRewardSkin() {
+        // Procedurally generate a "Lunar Kiro" golden glow skin
+        const c = document.createElement('canvas');
+        c.width = SPRITE_DST_W;
+        c.height = SPRITE_DST_H;
+        const rCtx = c.getContext('2d');
+        const hw = SPRITE_DST_W / 2;
+        const hh = SPRITE_DST_H / 2;
+        // Glow gradient fill
+        const grad = rCtx.createRadialGradient(hw, hh, 2, hw, hh, hw);
+        grad.addColorStop(0, '#FFE082');
+        grad.addColorStop(0.5, '#FFD54F');
+        grad.addColorStop(1, '#FF8F00');
+        rCtx.fillStyle = grad;
+        // Ghost shape
+        rCtx.beginPath();
+        rCtx.moveTo(0, SPRITE_DST_H);
+        rCtx.lineTo(0, hh - hh * 0.2);
+        rCtx.quadraticCurveTo(0, 0, hw, 0);
+        rCtx.quadraticCurveTo(SPRITE_DST_W, 0, SPRITE_DST_W, hh - hh * 0.2);
+        rCtx.lineTo(SPRITE_DST_W, SPRITE_DST_H);
+        rCtx.lineTo(SPRITE_DST_W * 0.75, SPRITE_DST_H * 0.85);
+        rCtx.lineTo(hw, SPRITE_DST_H);
+        rCtx.lineTo(SPRITE_DST_W * 0.25, SPRITE_DST_H * 0.85);
+        rCtx.closePath();
+        rCtx.fill();
+        // Eyes
+        rCtx.fillStyle = '#1A1A1A';
+        rCtx.beginPath();
+        rCtx.ellipse(hw - 5, hh - 3, 3, 4, 0, 0, Math.PI * 2);
+        rCtx.ellipse(hw + 5, hh - 3, 3, 4, 0, 0, Math.PI * 2);
+        rCtx.fill();
+        // Moon crescent on forehead
+        rCtx.fillStyle = '#FFF8E1';
+        rCtx.beginPath();
+        rCtx.arc(hw, hh * 0.3, 5, 0, Math.PI * 2);
+        rCtx.fill();
+        rCtx.fillStyle = grad;
+        rCtx.beginPath();
+        rCtx.arc(hw + 3, hh * 0.25, 4, 0, Math.PI * 2);
+        rCtx.fill();
+
+        const dataURL = c.toDataURL('image/png');
+        // Add to gallery if not already present
+        if (!this.skins.find(s => s.id === 'reward_lunar')) {
+          const skin = { id: 'reward_lunar', mainSprite: dataURL, deathSprite: null, name: '🌙 Lunar' };
+          this.skins.push(skin);
+          this._preloadSkin(skin);
+          this._save();
+        }
+      },
+
+      unlockNightReward() {
+        if (gameState.nightRewardUnlocked) return; // already unlocked
+        gameState.nightRewardUnlocked = true;
+        gameState.nightRewardJustUnlocked = true;
+        try { localStorage.setItem(NIGHT_REWARD_KEY, 'true'); } catch { /* silent */ }
+        this.generateRewardSkin();
+        ghosty.statusMsg = { text: '🌙 Lunar Kiro unlocked!', expiry: Date.now() + 3000 };
+      },
+    };
+
+
+    // ── NEAR-MISS DETECTION SUBSYSTEM ─────────────────────────────────────────
+    // Checks how close the bird's hitbox is to pipe edges as it passes through.
+    // If the clearance is below NEAR_MISS_THRESHOLD, activates near-miss glow.
+
+    const NearMissDetector = {
+      check(ghostyObj, pipes) {
+        const hitbox = CollisionDetector.insetHitbox(ghostyObj);
+        for (let i = 0; i < PIPE_POOL_SIZE; i++) {
+          const p = pipes[i];
+          if (!p.active) continue;
+          // Only check pipes the bird is horizontally overlapping
+          if (hitbox.x + hitbox.w < p.x || hitbox.x > p.x + p.width) continue;
+          // Vertical clearance to top pipe bottom edge (gapTop) and bottom pipe top edge (gapBottom)
+          const clearTop = hitbox.y - p.gapTop;              // how far bird top is from top-pipe bottom
+          const clearBot = p.gapBottom - (hitbox.y + hitbox.h); // how far bird bottom is from bottom-pipe top
+          const minClear = Math.min(clearTop, clearBot);
+          if (minClear > 0 && minClear < NEAR_MISS_THRESHOLD) {
+            gameState.nearMissActive = true;
+            gameState.nearMissTimer = NEAR_MISS_GLOW_MS;
+            return;
+          }
+        }
+      },
+      update(dtMs) {
+        if (!gameState.nearMissActive) return;
+        gameState.nearMissTimer -= dtMs;
+        if (gameState.nearMissTimer <= 0) {
+          gameState.nearMissActive = false;
+          gameState.nearMissTimer = 0;
+        }
+      },
+    };
+
+
+    // ── POWER-UP SYSTEM ───────────────────────────────────────────────────────
+    // Manages spawning, pickup, and effect logic for all 5 power-up types.
+    // Power-ups appear as glowing orbs in the pipe gaps during gameplay.
+
+    const POWERUP_TYPES = [
+      { type: 'shield',     icon: '\uD83D\uDEE1\uFE0F', color: '#00E5FF', glowColor: 'rgba(0,229,255,0.5)'  },
+      { type: 'slowmo',     icon: '\u23F1\uFE0F', color: '#FF9800', glowColor: 'rgba(255,152,0,0.5)'  },
+      { type: 'multiplier', icon: '\uD83C\uDF1F', color: '#FFD54F', glowColor: 'rgba(255,213,79,0.5)' },
+      { type: 'mini',       icon: '\uD83D\uDC23', color: '#76FF03', glowColor: 'rgba(118,255,3,0.5)'  },
+    ];
+    const POWERUP_RADIUS   = 14;  // px radius of pickup orb
+    const POWERUP_SPAWN_CHANCE = 0.18; // chance per pipe spawn to also spawn a power-up (0-1)
+
+    const PowerUpSystem = {
+      _pool: [],   // active power-up entities
+
+      reset() { this._pool = []; },
+
+      // Called when a new pipe spawns — may also spawn a power-up in the gap
+      trySpawn(pipe) {
+        // Only spawn during gameplay, with limited probability
+        if (Math.random() > POWERUP_SPAWN_CHANCE) return;
+        const typeEntry = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+        const gapMid    = pipe.gapTop + (pipe.gapBottom - pipe.gapTop) / 2;
+        // Offset the power-up vertically within the gap so it doesn't sit in the middle every time
+        const yJitter   = (Math.random() - 0.5) * (pipe.gapBottom - pipe.gapTop - POWERUP_RADIUS * 4);
+        this._pool.push({
+          x:       pipe.x + pipe.width / 2,
+          y:       gapMid + yJitter,
+          type:    typeEntry.type,
+          icon:    typeEntry.icon,
+          color:   typeEntry.color,
+          glowColor: typeEntry.glowColor,
+          active:  true,
+          pickupAnim: 0,   // 0 = not picked up, > 0 = expanding ring lifetime remaining (ms)
+        });
+      },
+
+      update(dt, ghosty, speed) {
+        const cx = ghosty.x + ghosty.width  / 2;
+        const cy = ghosty.y + ghosty.height / 2;
+
+        for (let i = this._pool.length - 1; i >= 0; i--) {
+          const pu = this._pool[i];
+
+          // Scroll power-up left with the world
+          if (pu.active) {
+            pu.x -= speed;
+          }
+
+          // (Magnet pull removed — magnet power-up no longer exists)
+
+          // Pickup animation countdown
+          if (pu.pickupAnim > 0) {
+            pu.pickupAnim -= dt;
+            if (pu.pickupAnim <= 0) {
+              this._pool.splice(i, 1); // remove fully animated pickup
+              continue;
+            }
+          }
+
+          // Remove if scrolled off screen
+          if (pu.active && pu.x + POWERUP_RADIUS < 0) {
+            this._pool.splice(i, 1);
+            continue;
+          }
+
+          // Check pickup collision (circle vs circle)
+          if (pu.active) {
+            const dx = cx - pu.x;
+            const dy = cy - pu.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < POWERUP_RADIUS + Math.min(ghosty.width, ghosty.height) * 0.4) {
+              pu.active = false;
+              pu.pickupAnim = 400; // start pickup anim for 400ms
+              this._applyEffect(pu.type, speed);
+            }
+          }
+        }
+
+        // Tick down active power-up timers
+        if (gameState.slowMoActive) {
+          gameState.slowMoTimer -= dt;
+          if (gameState.slowMoTimer <= 0) {
+            gameState.slowMoActive = false;
+            // Speed is managed externally by Scroller; it auto-recalculates from score
+          }
+        }
+        if (gameState.multiplierActive) {
+          gameState.multiplierTimer -= dt;
+          if (gameState.multiplierTimer <= 0) { gameState.multiplierActive = false; }
+        }
+        // (Magnet timer removed — magnet power-up no longer exists)
+        if (gameState.miniActive) {
+          gameState.miniTimer -= dt;
+          if (gameState.miniTimer <= 0) {
+            gameState.miniActive = false;
+            // Restore ghosty to normal size
+            ghosty.width  = SPRITE_DST_W;
+            ghosty.height = SPRITE_DST_H;
+          }
+        }
+      },
+
+      _applyEffect(type, currentSpeed) {
+        switch (type) {
+          case 'shield':
+            gameState.shieldActive = true;
+            break;
+          case 'slowmo':
+            gameState.slowMoActive    = true;
+            gameState.slowMoTimer     = 5000; // 5 seconds
+            gameState.slowMoSavedSpeed = currentSpeed;
+            break;
+          case 'multiplier':
+            gameState.multiplierActive = true;
+            gameState.multiplierTimer  = 8000; // 8 seconds
+            break;
+          // 'magnet' case removed — magnet power-up no longer exists
+          case 'mini':
+            gameState.miniActive  = true;
+            gameState.miniTimer   = 5000; // 5 seconds
+            // Shrink ghosty to half size
+            ghosty.width  = SPRITE_DST_W  * 0.55;
+            ghosty.height = SPRITE_DST_H  * 0.55;
+            break;
+        }
+        // ── Play power-up pickup sound ──
+        AudioManager.powerUp();
+      },
+
+      draw(ctxRef) {
+        const now = Date.now();
+        for (let i = 0; i < this._pool.length; i++) {
+          const pu = this._pool[i];
+
+          if (pu.pickupAnim > 0) {
+            // Pickup ring burst animation
+            const progress = 1 - pu.pickupAnim / 400;
+            const ringR = POWERUP_RADIUS + progress * 30;
+            ctxRef.save();
+            ctxRef.globalAlpha = 1 - progress;
+            ctxRef.strokeStyle = pu.color;
+            ctxRef.lineWidth = 3;
+            ctxRef.beginPath();
+            ctxRef.arc(pu.x, pu.y, ringR, 0, Math.PI * 2);
+            ctxRef.stroke();
+            ctxRef.restore();
+            continue;
+          }
+
+          if (!pu.active) continue;
+
+          // Floating bob animation
+          const bob = Math.sin(now / 500 + i) * 3;
+
+          ctxRef.save();
+          // Outer glow
+          ctxRef.shadowColor = pu.glowColor;
+          ctxRef.shadowBlur  = 14;
+          ctxRef.fillStyle   = pu.color;
+          ctxRef.globalAlpha = 0.85;
+          ctxRef.beginPath();
+          ctxRef.arc(pu.x, pu.y + bob, POWERUP_RADIUS, 0, Math.PI * 2);
+          ctxRef.fill();
+          ctxRef.shadowBlur = 0;
+          ctxRef.globalAlpha = 1;
+          // Draw icon emoji
+          ctxRef.font = `${POWERUP_RADIUS}px sans-serif`;
+          ctxRef.textAlign = 'center';
+          ctxRef.textBaseline = 'middle';
+          ctxRef.fillText(pu.icon, pu.x, pu.y + bob);
+          ctxRef.textBaseline = 'alphabetic';
+          ctxRef.restore();
+        }
+      },
+    };
+
+
     // ── GAME STATE ────────────────────────────────────────────────────────────
 
     const gameState = {
@@ -1228,14 +2131,35 @@
       shakeMagnitude:     0,
       audioEnabled:       true,      // when false, all AudioManager methods are no-ops
       darkMode:           false,     // dark/light mode toggle for UI chrome
+      manualDarkModeOverride: false, // true if user manually toggled dark mode
       activeAvatar:       'ghost',   // 'ghost' or 'custom' — which avatar to render
       hasCustomAvatar:    false,     // true once a custom avatar has been uploaded
+      // ── Near-miss feedback state
+      nearMissActive:     false,     // true when bird barely cleared a pipe
+      nearMissTimer:      0,         // ms remaining on near-miss glow
+      // ── Night mode reward state
+      nightRewardUnlocked: false,    // true once player earns the reward
+      nightRewardJustUnlocked: false,// true for one game-over screen to show notification
+      // ── Skin gallery
+      activeSkinId:       null,      // id of currently selected gallery skin (null = ghost default)
       themeTransition: {
         active:     false,
         fromTheme:  0,               // index into BG_THEMES of outgoing theme
         toTheme:    0,               // index into BG_THEMES of incoming theme
         progress:   0,               // 0.0 (start) → 1.0 (complete)
       },
+      // ── Combo Streak System
+      combo:              0,         // current consecutive pipe clear streak
+      scoreMultiplier:    1,         // current score multiplier from combo
+      // ── Power-Up state (magnet removed)
+      shieldActive:       false,     // absorbs one collision
+      slowMoActive:       false,     // slows pipe speed temporarily
+      slowMoTimer:        0,         // ms remaining on slow-mo
+      slowMoSavedSpeed:   0,         // original speed before slow-mo
+      multiplierActive:   false,     // temporary 2x score multiplier
+      multiplierTimer:    0,         // ms remaining on score multiplier
+      miniActive:         false,     // shrinks hitbox/sprite temporarily
+      miniTimer:          0,         // ms remaining on mini effect
     };
 
     // Store the custom sprite separately so we can switch between it and default
@@ -1249,6 +2173,7 @@
       width:        SPRITE_DST_W,   // 36 px
       height:       SPRITE_DST_H,   // 36 px
       sprite:       null,           // set after frames load (or by avatar selection)
+      deathSprite:  null,           // optional separate death image from gallery
       tilt:         0,              // degrees; managed by PhysicsEngine.tiltAngle
       visible:      true,           // toggled during invincibility flash
       animFrame:    0,              // 0=idle, 1=flap, 2=death
@@ -1285,6 +2210,7 @@
 
     function handleFlap() {
       if (gameState.phase === 'PAUSED') return; // no-op while paused
+      if (gameState.phase === 'GAME_OVER') return; // ignore flap when game is over (forces button click)
       if (gameState.phase === 'IDLE') {
         resetSession();
         gameState.phase = 'PLAYING';
@@ -1295,12 +2221,6 @@
         PhysicsEngine.flap(ghosty);
         AnimationSystem.triggerFlap();
         AudioManager.flap();
-        return;
-      }
-      if (gameState.phase === 'GAME_OVER') {
-        resetSession();
-        gameState.phase = 'PLAYING';
-        AudioManager.startMusic();
         return;
       }
     }
@@ -1329,7 +2249,11 @@
     }
     function toggleDarkMode() {
       gameState.darkMode = !gameState.darkMode;
-      try { localStorage.setItem(DARK_MODE_KEY, String(gameState.darkMode)); } catch { /* silent */ }
+      gameState.manualDarkModeOverride = true;
+      try { 
+        localStorage.setItem(DARK_MODE_KEY, String(gameState.darkMode)); 
+        localStorage.setItem(DARK_MODE_OVERRIDE_KEY, 'true');
+      } catch { /* silent */ }
       // Update body background to match mode
       document.body.style.background = gameState.darkMode ? '#050510' : '#1a1a2e';
     }
@@ -1347,9 +2271,22 @@
     }
     function handleCollision(hit) {
       if (!hit) return;
-      // Instant game over on any collision — Flappy Bird behavior
       if (gameState.invincible) return; // prevent re-triggering during same frame
+
+      // ── Shield power-up: absorb one hit ──
+      if (gameState.shieldActive) {
+        gameState.shieldActive = false;
+        gameState.combo = 0;          // lose combo streak on shielded hit
+        gameState.scoreMultiplier = 1;
+        // Brief invincibility frames after shield absorbs hit
+        gameState.invincible = true;
+        gameState.invincibilityStart = Date.now();
+        return;
+      }
+
       gameState.invincible = true; // guard against multiple triggers
+      gameState.combo = 0;         // reset combo on death
+      gameState.scoreMultiplier = 1;
       _triggerGameOver();
     }
 
@@ -1366,6 +2303,10 @@
         gameState.highScore = gameState.score;
         saveHighScore(gameState.highScore);
       }
+      // Night mode reward: unlock special skin if criteria met
+      if (gameState.darkMode && gameState.score >= NIGHT_REWARD_SCORE) {
+        SkinGallery.unlockNightReward();
+      }
     }
     function checkScoring() {
       // Score when ghosty's leading edge (right side) passes the pipe's right edge
@@ -1375,10 +2316,18 @@
         if (!p.active || p.scored) continue;
         if (ghostyRight >= p.x + p.width) {
           p.scored = true;
-          gameState.score++;
+
+          // ── Scoring Logic ──
+          gameState.combo++; // Track for stats if desired, but doesn't affect score anymore
+
+          // ── Exactly 1 point per pipe, unless 2x power-up is active ──
+          let pts = 1;
+          if (gameState.multiplierActive) pts = 2;
+          gameState.score += pts;
+
           Scroller.currentSpeed = Scroller.getSpeed(gameState.score);
           AudioManager.score();
-          HUD.spawnPopup(ghosty.x + ghosty.width / 2, ghosty.y);
+          HUD.spawnPopup(ghosty.x + ghosty.width / 2, ghosty.y, pts);
           if (gameState.score > gameState.highScore) {
             gameState.highScore = gameState.score;
             saveHighScore(gameState.highScore);
@@ -1392,12 +2341,31 @@
       gameState.invincibilityStart = null;
       gameState.shaking     = false;
       gameState.shakeStart  = null;
+      // Reset near-miss feedback state
+      gameState.nearMissActive = false;
+      gameState.nearMissTimer  = 0;
+      gameState.nightRewardJustUnlocked = false;
+      // ── Reset Combo & Multiplier ──
+      gameState.combo = 0;
+      gameState.scoreMultiplier = 1;
+      // ── Reset all Power-Ups (magnet removed) ──
+      gameState.shieldActive     = false;
+      gameState.slowMoActive     = false;
+      gameState.slowMoTimer      = 0;
+      gameState.multiplierActive = false;
+      gameState.multiplierTimer  = 0;
+      gameState.miniActive       = false;
+      gameState.miniTimer        = 0;
+      // Reset ghosty size if mini was active
+      ghosty.width   = SPRITE_DST_W;
+      ghosty.height  = SPRITE_DST_H;
       ghosty.x              = canvasW * 0.25 - ghosty.width / 2;
       ghosty.y              = canvasH / 2 - ghosty.height / 2;
       ghosty.vy             = 0;
       ghosty.visible        = true;
       ghosty.tilt           = 0;
       Scroller.reset();
+      PowerUpSystem.reset();
       ParticleSystem.clear();
       HUD.clearPopups();
       AnimationSystem.reset();
@@ -1454,6 +2422,27 @@
       ParallaxSystem.draw(ctxRef);
       // 4. Pipes
       drawPipes(ctxRef, pipePool);
+      // 4b. Power-ups (drawn on top of pipes but behind bird)
+      PowerUpSystem.draw(ctxRef);
+      
+      // Night mode: limited-visibility lantern effect
+      if (gameState.darkMode) {
+        const cx = ghosty.x + ghosty.width / 2;
+        const cy = ghosty.y + ghosty.height / 2;
+        const grad = ctxRef.createRadialGradient(cx, cy, 50, cx, cy, 180);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.95)');
+        ctxRef.fillStyle = grad;
+        ctxRef.fillRect(0, 0, canvasW, canvasH - SCORE_BAR_H);
+      }
+
+      // Vignette effect for depth
+      const vignette = ctxRef.createRadialGradient(canvasW/2, canvasH/2, canvasH*0.3, canvasW/2, canvasH/2, canvasH*0.8);
+      vignette.addColorStop(0, 'rgba(0,0,0,0)');
+      vignette.addColorStop(1, 'rgba(0,0,0,0.4)');
+      ctxRef.fillStyle = vignette;
+      ctxRef.fillRect(0, 0, canvasW, canvasH - SCORE_BAR_H);
+
       // 5. Ghosty (with idle bob animation when in IDLE state)
       if (gameState.phase === 'IDLE') {
         const bobOffset = Math.sin(Date.now() / 400) * 4;
@@ -1491,13 +2480,61 @@
       const cy = ghostyObj.y + ghostyObj.height / 2;
       const hw = ghostyObj.width / 2;
       const hh = ghostyObj.height / 2;
+
+      // ── Near-miss glow effect (pulsating outline around the bird) ──
+      if (gameState.nearMissActive && gameState.phase === 'PLAYING') {
+        const pulse = 0.4 + 0.6 * Math.abs(Math.sin(Date.now() / 80));
+        ctxRef.save();
+        ctxRef.shadowColor = `rgba(255, 215, 0, ${pulse})`;
+        ctxRef.shadowBlur = 18;
+        ctxRef.fillStyle = `rgba(255, 215, 0, ${pulse * 0.25})`;
+        ctxRef.beginPath();
+        ctxRef.arc(cx, cy, hw + 6, 0, Math.PI * 2);
+        ctxRef.fill();
+        ctxRef.restore();
+      }
+
+      // ── Shield power-up effect (glowing cyan bubble around the bird) ──
+      // Persists visually until consumed by a collision.
+      if (gameState.shieldActive && gameState.phase === 'PLAYING') {
+        const shieldPulse = 0.7 + 0.3 * Math.abs(Math.sin(Date.now() / 150));
+        ctxRef.save();
+        ctxRef.shadowColor = `rgba(0, 229, 255, ${shieldPulse})`;
+        ctxRef.shadowBlur = 15;
+        ctxRef.strokeStyle = `rgba(0, 229, 255, ${shieldPulse * 0.8})`;
+        ctxRef.lineWidth = 3;
+        ctxRef.fillStyle = `rgba(0, 229, 255, 0.15)`;
+        ctxRef.beginPath();
+        ctxRef.arc(cx, cy, hw + 8, 0, Math.PI * 2);
+        ctxRef.fill();
+        ctxRef.stroke();
+        
+        // Add a small specular highlight for a "bubble" look
+        ctxRef.fillStyle = `rgba(255, 255, 255, 0.4)`;
+        ctxRef.beginPath();
+        ctxRef.arc(cx - 8, cy - 8, 4, 0, Math.PI * 2);
+        ctxRef.fill();
+        ctxRef.restore();
+      }
+
       ctxRef.save();
       ctxRef.translate(cx, cy);
       ctxRef.rotate(ghostyObj.tilt * Math.PI / 180);
 
       let drawn = false;
 
-      if (ghostyObj.isCustomSprite && ghostyObj.sprite) {
+      // ── Death sprite override: show deathSprite if game over + one exists ──
+      const useDeathSprite = (gameState.phase === 'GAME_OVER' && ghostyObj.deathSprite);
+      const spriteToUse = useDeathSprite ? ghostyObj.deathSprite : ghostyObj.sprite;
+
+      // ── Cycling neon glow: applied as a shadow so it follows the sprite's
+      // actual pixel outline (no box artifact). Color shifts slowly over time.
+      const glowHue   = (Date.now() / 50) % 360;
+      const glowColor = `hsl(${glowHue}, 100%, 65%)`;
+      ctxRef.shadowColor = glowColor;
+      ctxRef.shadowBlur  = 10;
+
+      if (ghostyObj.isCustomSprite && spriteToUse) {
         // Custom avatar: clip to ghost shape, draw the uploaded image
         try {
           ctxRef.beginPath();
@@ -1511,21 +2548,25 @@
           ctxRef.lineTo(-hw * 0.5, hh * 0.7);
           ctxRef.closePath();
           ctxRef.clip();
-          const srcW = ghostyObj.sprite.naturalWidth || ghostyObj.sprite.width;
-          const srcH = ghostyObj.sprite.naturalHeight || ghostyObj.sprite.height;
+          const srcW = spriteToUse.naturalWidth || spriteToUse.width;
+          const srcH = spriteToUse.naturalHeight || spriteToUse.height;
           if (srcW > 0 && srcH > 0) {
-            ctxRef.drawImage(ghostyObj.sprite, 0, 0, srcW, srcH, -hw, -hh, ghostyObj.width, ghostyObj.height);
+            ctxRef.drawImage(spriteToUse, 0, 0, srcW, srcH, -hw, -hh, ghostyObj.width, ghostyObj.height);
             drawn = true;
           }
         } catch (e) { drawn = false; }
       } else if (ghostySpriteSheet) {
-        // Default ghost: draw the current animation frame from the 8-frame sprite sheet
+        // Default ghost: draw the current animation frame from the sprite sheet
         try {
           const { sx, sy, sw, sh } = AnimationSystem.getSourceRect();
           ctxRef.drawImage(ghostySpriteSheet, sx, sy, sw, sh, -hw, -hh, ghostyObj.width, ghostyObj.height);
           drawn = true;
         } catch (e) { drawn = false; }
       }
+
+      // Clear shadow after sprite draw so it doesn't bleed onto other elements
+      ctxRef.shadowBlur  = 0;
+      ctxRef.shadowColor = 'transparent';
 
       // Fallback: procedural ghost if nothing else worked
       if (!drawn) {
@@ -1555,27 +2596,49 @@
     }
 
     function drawPipes(ctxRef, pipes) {
-      // Draw all pipe bodies
-      ctxRef.fillStyle = PIPE_COLOR;
       for (let i = 0; i < PIPE_POOL_SIZE; i++) {
         const p = pipes[i];
         if (!p.active) continue;
-        // Top pipe body
+        
+        // ── Top pipe body
+        ctxRef.fillStyle = PIPE_COLOR;
         ctxRef.fillRect(p.x, 0, p.width, p.gapTop);
-        // Bottom pipe body
+        // Highlight & shadow for 3D effect
+        ctxRef.fillStyle = 'rgba(255,255,255,0.15)';
+        ctxRef.fillRect(p.x, 0, p.width * 0.2, p.gapTop);
+        ctxRef.fillStyle = 'rgba(0,0,0,0.2)';
+        ctxRef.fillRect(p.x + p.width * 0.8, 0, p.width * 0.2, p.gapTop);
+
+        // ── Bottom pipe body
+        ctxRef.fillStyle = PIPE_COLOR;
         ctxRef.fillRect(p.x, p.gapBottom, p.width, canvasH - SCORE_BAR_H - p.gapBottom);
+        ctxRef.fillStyle = 'rgba(255,255,255,0.15)';
+        ctxRef.fillRect(p.x, p.gapBottom, p.width * 0.2, canvasH - SCORE_BAR_H - p.gapBottom);
+        ctxRef.fillStyle = 'rgba(0,0,0,0.2)';
+        ctxRef.fillRect(p.x + p.width * 0.8, p.gapBottom, p.width * 0.2, canvasH - SCORE_BAR_H - p.gapBottom);
       }
+
       // Draw all pipe caps
-      ctxRef.fillStyle = PIPE_CAP_COLOR;
       for (let i = 0; i < PIPE_POOL_SIZE; i++) {
         const p = pipes[i];
         if (!p.active) continue;
+        
+        ctxRef.fillStyle = PIPE_CAP_COLOR;
         // Top pipe cap (at bottom of top pipe, facing gap)
-        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG, p.gapTop - PIPE_CAP_H,
-          p.width + PIPE_CAP_OVERHANG * 2, PIPE_CAP_H);
+        const capTopY = p.gapTop - PIPE_CAP_H;
+        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG, capTopY, p.width + PIPE_CAP_OVERHANG * 2, PIPE_CAP_H);
+        ctxRef.fillStyle = 'rgba(255,255,255,0.2)';
+        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG, capTopY, (p.width + PIPE_CAP_OVERHANG * 2) * 0.15, PIPE_CAP_H);
+        ctxRef.fillStyle = 'rgba(0,0,0,0.3)';
+        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG + (p.width + PIPE_CAP_OVERHANG * 2) * 0.85, capTopY, (p.width + PIPE_CAP_OVERHANG * 2) * 0.15, PIPE_CAP_H);
+
         // Bottom pipe cap (at top of bottom pipe, facing gap)
-        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG, p.gapBottom,
-          p.width + PIPE_CAP_OVERHANG * 2, PIPE_CAP_H);
+        ctxRef.fillStyle = PIPE_CAP_COLOR;
+        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG, p.gapBottom, p.width + PIPE_CAP_OVERHANG * 2, PIPE_CAP_H);
+        ctxRef.fillStyle = 'rgba(255,255,255,0.2)';
+        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG, p.gapBottom, (p.width + PIPE_CAP_OVERHANG * 2) * 0.15, PIPE_CAP_H);
+        ctxRef.fillStyle = 'rgba(0,0,0,0.3)';
+        ctxRef.fillRect(p.x - PIPE_CAP_OVERHANG + (p.width + PIPE_CAP_OVERHANG * 2) * 0.85, p.gapBottom, (p.width + PIPE_CAP_OVERHANG * 2) * 0.15, PIPE_CAP_H);
       }
     }
 
@@ -1594,63 +2657,96 @@
       document.getElementById('closeDisclaimer').addEventListener('click', () => {
         document.getElementById('disclaimerModalOverlay').style.display = 'none';
       });
+      // Setup mechanics close button
+      document.getElementById('closeMechanicsBtn').addEventListener('click', () => {
+        document.getElementById('mechanicsModalOverlay').style.display = 'none';
+      });
 
       // Load persisted preferences
       gameState.highScore    = loadHighScore();
       gameState.audioEnabled = loadAudioEnabled();
-      try { gameState.darkMode = localStorage.getItem(DARK_MODE_KEY) === 'true'; } catch { /* silent */ }
+      try { gameState.manualDarkModeOverride = localStorage.getItem(DARK_MODE_OVERRIDE_KEY) === 'true'; } catch { /* silent */ }
+      if (gameState.manualDarkModeOverride) {
+        try { gameState.darkMode = localStorage.getItem(DARK_MODE_KEY) === 'true'; } catch { /* silent */ }
+      } else {
+        const hour = new Date().getHours();
+        gameState.darkMode = (hour < 6 || hour >= 18);
+      }
       try { gameState.activeAvatar = localStorage.getItem(AVATAR_KEY) || 'ghost'; } catch { /* silent */ }
+      try { gameState.activeSkinId = localStorage.getItem(ACTIVE_SKIN_KEY) || null; } catch { /* silent */ }
 
       // Apply dark mode to body
       if (gameState.darkMode) document.body.style.background = '#050510';
 
-      // Initialise subsystems
+      // ── Initialise subsystems ──
       ParallaxSystem.init(canvasW, canvasH);
       AudioManager.init();
+
+      // ── Load Skin Gallery (migrates legacy sprite, loads night reward status) ──
+      SkinGallery.load();
+      // Generate the reward skin image if already unlocked (so it's selectable)
+      if (gameState.nightRewardUnlocked) {
+        SkinGallery.generateRewardSkin();
+      }
+      // Restore the last-selected gallery skin
+      if (gameState.activeSkinId && gameState.activeAvatar === 'custom') {
+        SkinGallery.selectSkin(gameState.activeSkinId);
+      }
+      // If gallery has skins, mark custom avatar as available
+      if (SkinGallery.skins.length > 0) {
+        gameState.hasCustomAvatar = true;
+      }
+
       InputHandler.init(canvas, {
         onFlap:           handleFlap,
         onPause:          handlePause,
         onToggleAudio:    toggleAudio,
-        onOpenUpload:     () => document.getElementById('spriteUpload').click(),
+        onOpenUpload:     () => {
+          // Open the Skin Gallery modal instead of directly triggering file input
+          document.getElementById('skinGalleryModal').style.display = 'flex';
+          SkinGallery.renderGalleryUI();
+        },
         onToggleDarkMode: toggleDarkMode,
         onSelectAvatar:   selectAvatar,
         onMainMenu:       goToMainMenu,
+        onShowMechanics:  () => { document.getElementById('mechanicsModalOverlay').style.display = 'flex'; },
         onShowDisclaimer: () => { document.getElementById('disclaimerModalOverlay').style.display = 'flex'; },
       });
 
-      // Custom character upload handler
-      const fileInput = document.getElementById('spriteUpload');
-      fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+      // ── Gallery modal close button ──
+      document.getElementById('closeGallery').addEventListener('click', () => {
+        document.getElementById('skinGalleryModal').style.display = 'none';
+      });
 
-        // Validate file type (PNG/JPG/GIF/WebP)
+      // ── "+ NEW SKIN" button inside gallery ──
+      document.getElementById('uploadNewSkinBtn').addEventListener('click', () => {
+        document.getElementById('spriteUpload').click();
+      });
+
+      // ── "+ DEATH SPRITE" button inside gallery ──
+      document.getElementById('uploadDeathSpriteBtn').addEventListener('click', () => {
+        document.getElementById('deathSpriteUpload').click();
+      });
+
+      // ── Shared helper: resize an uploaded image to the ghost sprite dimensions ──
+      function _processUploadedImage(file, callback) {
         const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
-          console.warn('Invalid file type:', file.type);
           ghosty.statusMsg = { text: 'Invalid format! Use PNG/JPG.', expiry: Date.now() + 2000 };
-          fileInput.value = '';
           return;
         }
-
-        // Validate file size (max 512KB)
         if (file.size > 512 * 1024) {
-          console.warn('File too large:', file.size);
           ghosty.statusMsg = { text: 'File too large! Max 512KB.', expiry: Date.now() + 2000 };
-          fileInput.value = '';
           return;
         }
-
         const reader = new FileReader();
         reader.onload = (ev) => {
           const rawImg = new Image();
           rawImg.onload = () => {
-            // Resize uploaded image to match ghost's exact render dimensions
             const resizeCanvas = document.createElement('canvas');
-            resizeCanvas.width = SPRITE_DST_W;   // 36
-            resizeCanvas.height = SPRITE_DST_H;  // 36
+            resizeCanvas.width = SPRITE_DST_W;
+            resizeCanvas.height = SPRITE_DST_H;
             const rCtx = resizeCanvas.getContext('2d');
-            // Clip to ghost shape before drawing
             const hw = SPRITE_DST_W / 2;
             const hh = SPRITE_DST_H / 2;
             rCtx.beginPath();
@@ -1665,22 +2761,7 @@
             rCtx.closePath();
             rCtx.clip();
             rCtx.drawImage(rawImg, 0, 0, rawImg.naturalWidth, rawImg.naturalHeight, 0, 0, SPRITE_DST_W, SPRITE_DST_H);
-
-            const resizedImg = new Image();
-            resizedImg.onload = () => {
-              customSpriteImg = resizedImg;
-              gameState.hasCustomAvatar = true;
-              ghosty.sprite = resizedImg;
-              ghosty.isCustomSprite = true;
-              ghostyImgLoaded = true;
-              gameState.activeAvatar = 'custom';
-              ghosty.statusMsg = { text: 'Avatar uploaded!', expiry: Date.now() + 2000 };
-              try {
-                localStorage.setItem(CUSTOM_SPRITE_KEY, resizeCanvas.toDataURL('image/png'));
-                localStorage.setItem(AVATAR_KEY, 'custom');
-              } catch { /* silent */ }
-            };
-            resizedImg.src = resizeCanvas.toDataURL('image/png');
+            callback(resizeCanvas.toDataURL('image/png'));
           };
           rawImg.onerror = () => {
             ghosty.statusMsg = { text: 'Failed to load image.', expiry: Date.now() + 2000 };
@@ -1688,19 +2769,52 @@
           rawImg.src = ev.target.result;
         };
         reader.readAsDataURL(file);
+      }
+
+      // ── Main sprite upload handler (now adds to gallery) ──
+      const fileInput = document.getElementById('spriteUpload');
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        _processUploadedImage(file, (dataURL) => {
+          const newId = SkinGallery.addSkin(dataURL);
+          SkinGallery.selectSkin(newId);
+          gameState.hasCustomAvatar = true;
+          ghosty.statusMsg = { text: 'Skin added to gallery!', expiry: Date.now() + 2000 };
+          SkinGallery.renderGalleryUI();
+        });
         fileInput.value = '';
       });
 
-      // Restore custom sprite from localStorage if previously uploaded
+      // ── Death sprite upload handler ──
+      const deathInput = document.getElementById('deathSpriteUpload');
+      deathInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!gameState.activeSkinId) {
+          ghosty.statusMsg = { text: 'Select a skin first!', expiry: Date.now() + 2000 };
+          deathInput.value = '';
+          return;
+        }
+        _processUploadedImage(file, (dataURL) => {
+          SkinGallery.setDeathSprite(gameState.activeSkinId, dataURL);
+          ghosty.deathSprite = SkinGallery.getActiveDeathSprite();
+          ghosty.statusMsg = { text: 'Death sprite set!', expiry: Date.now() + 2000 };
+          SkinGallery.renderGalleryUI();
+        });
+        deathInput.value = '';
+      });
+
+      // ── Legacy restore (backwards compatibility) ──
+      // If the gallery didn't pick up a legacy sprite and one exists, load it
       try {
         const savedSprite = localStorage.getItem(CUSTOM_SPRITE_KEY);
-        if (savedSprite) {
+        if (savedSprite && !gameState.hasCustomAvatar) {
           const img = new Image();
           img.onload = () => {
             customSpriteImg = img;
             gameState.hasCustomAvatar = true;
             ghostyImgLoaded = true;
-            // Apply the saved avatar preference
             if (gameState.activeAvatar === 'custom') {
               ghosty.sprite = img;
               ghosty.isCustomSprite = true;
